@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import About from './pages/About';
 import Services from './pages/Services';
 import ServiceDetail from './pages/ServiceDetail';
+import FindLawyers from './pages/FindLawyers';
+import LawyerProfile from './pages/LawyerProfile';
 import LegalResources from './pages/LegalResources';
 import Testimonials from './pages/Testimonials';
 import FAQ from './pages/FAQ';
@@ -31,6 +33,8 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/services" element={<Services />} />
         <Route path="/services/:slug" element={<ServiceDetail />} />
+        <Route path="/find-lawyers" element={<FindLawyers />} />
+        <Route path="/lawyers/:slug" element={<LawyerProfile />} />
         <Route path="/legal-resources" element={<LegalResources />} />
         <Route path="/testimonials" element={<Testimonials />} />
         <Route path="/faq" element={<FAQ />} />

@@ -2,50 +2,60 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Star, MapPin, Award, Shield } from 'lucide-react';
 
+import { Link } from 'react-router-dom';
+
 const lawyers = [
   {
     name: 'Adv. Priya Sharma',
+    slug: 'adv-priya-sharma',
     initials: 'PS',
-    color: 'from-blue-600 to-indigo-800',
-    specialization: 'Corporate Law',
-    location: 'Mumbai, India',
-    experience: '15 Yrs',
+    color: 'from-[#D4AF37] to-[#8c7324]',
+    specialization: 'Family Law',
+    location: 'Delhi, India',
+    experience: '12 Yrs',
     rating: 4.9,
     reviews: 342,
-    court: 'Bombay High Court'
+    court: 'Delhi High Court',
+    isPremium: true
   },
   {
     name: 'Adv. Rajesh Kumar',
+    slug: 'adv-rajesh-kumar',
     initials: 'RK',
-    color: 'from-emerald-600 to-teal-800',
+    color: 'from-blue-600 to-indigo-800',
     specialization: 'Property Law',
-    location: 'Delhi, India',
-    experience: '22 Yrs',
+    location: 'Mumbai, India',
+    experience: '18 Yrs',
     rating: 4.8,
     reviews: 512,
-    court: 'Supreme Court of India'
+    court: 'Bombay High Court',
+    isPremium: true
   },
   {
     name: 'Adv. Ananya Mehta',
+    slug: 'adv-ananya-mehta',
     initials: 'AM',
     color: 'from-purple-600 to-fuchsia-800',
-    specialization: 'Family Law',
+    specialization: 'Corporate Law',
     location: 'Bangalore, India',
-    experience: '12 Yrs',
+    experience: '10 Yrs',
     rating: 4.9,
     reviews: 289,
-    court: 'Karnataka High Court'
+    court: 'Karnataka High Court',
+    isPremium: true
   },
   {
     name: 'Adv. Vikram Singh',
+    slug: 'adv-vikram-singh',
     initials: 'VS',
     color: 'from-orange-600 to-red-800',
     specialization: 'Criminal Law',
-    location: 'Chandigarh, India',
-    experience: '18 Yrs',
+    location: 'Delhi, India',
+    experience: '22 Yrs',
     rating: 4.7,
     reviews: 405,
-    court: 'Punjab & Haryana HC'
+    court: 'Supreme Court of India',
+    isPremium: false
   }
 ];
 
@@ -137,9 +147,9 @@ const FeaturedLawyers = () => {
               </div>
 
               <div className="mt-auto">
-                <button className="w-full bg-white/5 hover:bg-[#D4AF37] text-white hover:text-[#102542] border border-[#D4AF37]/30 hover:border-[#D4AF37] font-sans font-semibold py-3 rounded-xl transition-all duration-300">
+                <Link to={`/lawyers/${lawyer.slug}`} className="block w-full bg-white/5 hover:bg-[#D4AF37] text-white hover:text-[#102542] border border-[#D4AF37]/30 hover:border-[#D4AF37] text-center font-sans font-semibold py-3 rounded-xl transition-all duration-300">
                   Consult Now
-                </button>
+                </Link>
               </div>
             </motion.div>
           ))}
