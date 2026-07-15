@@ -14,6 +14,13 @@ import CookiePolicy from './pages/CookiePolicy';
 import Disclaimer from './pages/Disclaimer';
 import NotFound from './pages/NotFound';
 
+// Auth Pages
+import ChooseRegistration from './pages/auth/ChooseRegistration';
+import ClientRegister from './pages/auth/ClientRegister';
+import LawyerRegister from './pages/auth/LawyerRegister';
+import Login from './pages/auth/Login';
+import ForgotPassword from './pages/auth/ForgotPassword';
+
 function App() {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
   
@@ -32,6 +39,14 @@ function App() {
         <Route path="/terms-conditions" element={<TermsConditions />} />
         <Route path="/cookie-policy" element={<CookiePolicy />} />
         <Route path="/disclaimer" element={<Disclaimer />} />
+        
+        {/* Auth Routes */}
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<ChooseRegistration />} />
+        <Route path="/register/client" element={<ClientRegister />} />
+        <Route path="/register/lawyer" element={<LawyerRegister />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        
         <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
