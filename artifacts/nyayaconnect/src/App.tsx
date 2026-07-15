@@ -1,5 +1,18 @@
+import React from 'react';
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import Home from './pages/Home';
+import About from './pages/About';
+import Services from './pages/Services';
+import ServiceDetail from './pages/ServiceDetail';
+import LegalResources from './pages/LegalResources';
+import Testimonials from './pages/Testimonials';
+import FAQ from './pages/FAQ';
+import Contact from './pages/Contact';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsConditions from './pages/TermsConditions';
+import CookiePolicy from './pages/CookiePolicy';
+import Disclaimer from './pages/Disclaimer';
+import NotFound from './pages/NotFound';
 
 function App() {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
@@ -8,12 +21,18 @@ function App() {
     <BrowserRouter basename={basePath}>
       <Routes>
         <Route path="/" element={<Home />} />
-        <Route path="*" element={
-          <div className="min-h-screen w-full flex flex-col items-center justify-center bg-[#102542] text-white">
-            <h1 className="text-4xl font-serif text-[#D4AF37] mb-4">404</h1>
-            <p className="font-sans">Page not found</p>
-          </div>
-        } />
+        <Route path="/about" element={<About />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/services/:slug" element={<ServiceDetail />} />
+        <Route path="/legal-resources" element={<LegalResources />} />
+        <Route path="/testimonials" element={<Testimonials />} />
+        <Route path="/faq" element={<FAQ />} />
+        <Route path="/contact" element={<Contact />} />
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-conditions" element={<TermsConditions />} />
+        <Route path="/cookie-policy" element={<CookiePolicy />} />
+        <Route path="/disclaimer" element={<Disclaimer />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );

@@ -43,9 +43,10 @@ const Footer = () => {
             <ul className="flex flex-col gap-3 font-sans text-sm text-gray-400">
               <li><Link to="/" className="hover:text-[#D4AF37] transition-colors">Home</Link></li>
               <li><Link to="/about" className="hover:text-[#D4AF37] transition-colors">About Us</Link></li>
-              <li><Link to="/services" className="hover:text-[#D4AF37] transition-colors">How It Works</Link></li>
-              <li><Link to="/find-lawyers" className="hover:text-[#D4AF37] transition-colors">Find Lawyers</Link></li>
-              <li><Link to="/blog" className="hover:text-[#D4AF37] transition-colors">Legal Blog</Link></li>
+              <li><Link to="/services" className="hover:text-[#D4AF37] transition-colors">Services</Link></li>
+              <li><Link to="/legal-resources" className="hover:text-[#D4AF37] transition-colors">Legal Resources</Link></li>
+              <li><Link to="/testimonials" className="hover:text-[#D4AF37] transition-colors">Testimonials</Link></li>
+              <li><Link to="/faq" className="hover:text-[#D4AF37] transition-colors">FAQ</Link></li>
               <li><Link to="/contact" className="hover:text-[#D4AF37] transition-colors">Contact Support</Link></li>
             </ul>
           </div>
@@ -56,12 +57,12 @@ const Footer = () => {
               <span className="w-4 h-[2px] bg-[#D4AF37]"></span> Practice Areas
             </h4>
             <ul className="flex flex-col gap-3 font-sans text-sm text-gray-400">
-              <li><Link to="#" className="hover:text-[#D4AF37] transition-colors">Criminal Defense</Link></li>
-              <li><Link to="#" className="hover:text-[#D4AF37] transition-colors">Family & Divorce Law</Link></li>
-              <li><Link to="#" className="hover:text-[#D4AF37] transition-colors">Property Disputes</Link></li>
-              <li><Link to="#" className="hover:text-[#D4AF37] transition-colors">Corporate & Startup</Link></li>
-              <li><Link to="#" className="hover:text-[#D4AF37] transition-colors">Cyber Crime</Link></li>
-              <li><Link to="#" className="hover:text-[#D4AF37] transition-colors">Tax & Compliance</Link></li>
+              <li><Link to="/services/criminal-law" className="hover:text-[#D4AF37] transition-colors">Criminal Defense</Link></li>
+              <li><Link to="/services/family-law" className="hover:text-[#D4AF37] transition-colors">Family & Divorce Law</Link></li>
+              <li><Link to="/services/property-law" className="hover:text-[#D4AF37] transition-colors">Property Disputes</Link></li>
+              <li><Link to="/services/corporate-law" className="hover:text-[#D4AF37] transition-colors">Corporate & Startup</Link></li>
+              <li><Link to="/services/cyber-crime" className="hover:text-[#D4AF37] transition-colors">Cyber Crime</Link></li>
+              <li><Link to="/services/tax-law" className="hover:text-[#D4AF37] transition-colors">Tax & Compliance</Link></li>
             </ul>
           </div>
 
@@ -92,9 +93,10 @@ const Footer = () => {
         <div className="pt-8 border-t border-[#D4AF37]/30 flex flex-col md:flex-row items-center justify-between gap-4 font-sans text-xs text-gray-500">
           <p>© {new Date().getFullYear()} NyayaConnect. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <Link to="#" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
-            <Link to="#" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
-            <Link to="#" className="hover:text-[#D4AF37] transition-colors">Grievance Redressal</Link>
+            <Link to="/privacy-policy" className="hover:text-[#D4AF37] transition-colors">Privacy Policy</Link>
+            <Link to="/terms-conditions" className="hover:text-[#D4AF37] transition-colors">Terms of Service</Link>
+            <Link to="/cookie-policy" className="hover:text-[#D4AF37] transition-colors">Cookie Policy</Link>
+            <Link to="/disclaimer" className="hover:text-[#D4AF37] transition-colors">Disclaimer</Link>
           </div>
         </div>
       </div>

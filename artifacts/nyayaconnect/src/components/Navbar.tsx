@@ -19,8 +19,9 @@ const Navbar = () => {
     { name: 'Home', path: '/' },
     { name: 'About', path: '/about' },
     { name: 'Services', path: '/services' },
-    { name: 'Find Lawyers', path: '/find-lawyers' },
-    { name: 'Legal Resources', path: '/resources' },
+    { name: 'Legal Resources', path: '/legal-resources' },
+    { name: 'Testimonials', path: '/testimonials' },
+    { name: 'FAQ', path: '/faq' },
     { name: 'Contact', path: '/contact' },
   ];
 
@@ -42,7 +43,7 @@ const Navbar = () => {
 
         {/* Desktop Nav */}
         <nav className="hidden lg:flex items-center gap-8">
-          <ul className="flex items-center gap-8">
+          <ul className="flex items-center gap-6">
             {navLinks.map((link) => (
               <li key={link.name}>
                 <Link

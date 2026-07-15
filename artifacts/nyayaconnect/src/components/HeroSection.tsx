@@ -1,9 +1,9 @@
 import React from 'react';
-import { motion } from 'framer-motion';
+import { motion, type Variants } from 'framer-motion';
 import { ShieldCheck, Star, Award, ArrowRight } from 'lucide-react';
 
 const HeroSection = () => {
-  const containerVariants = {
+  const containerVariants: Variants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
@@ -14,9 +14,9 @@ const HeroSection = () => {
     },
   };
 
-  const itemVariants = {
+  const itemVariants: Variants = {
     hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" } },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: "easeOut" as const } },
   };
 
   // Generate some dots for the background pattern
@@ -75,11 +75,9 @@ const HeroSection = () => {
               </span>
             </motion.div>
             
-            <motion.variants>
-              <motion.h1 variants={itemVariants} className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
-                Justice Made <span className="gold-gradient-text">Simple.</span>
-              </motion.h1>
-            </motion.variants>
+            <motion.h1 variants={itemVariants} className="font-serif text-5xl md:text-6xl lg:text-7xl font-bold leading-tight mb-6">
+              Justice Made <span className="gold-gradient-text">Simple.</span>
+            </motion.h1>
             
             <motion.p variants={itemVariants} className="font-sans text-lg md:text-xl text-gray-300 font-light max-w-2xl mb-10 leading-relaxed">
               Professional Legal Assistance at Your Fingertips. Connect with top-tier advocates, schedule consultations instantly, and resolve your legal matters with confidence.
