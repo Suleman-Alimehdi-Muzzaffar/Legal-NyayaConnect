@@ -23,6 +23,16 @@ import LawyerRegister from './pages/auth/LawyerRegister';
 import Login from './pages/auth/Login';
 import ForgotPassword from './pages/auth/ForgotPassword';
 
+// Dashboard Pages
+import DashboardLayout from './pages/dashboard/DashboardLayout';
+import Dashboard from './pages/dashboard/Dashboard';
+import Appointments from './pages/dashboard/Appointments';
+import Documents from './pages/dashboard/Documents';
+import CalendarPage from './pages/dashboard/Calendar';
+import NotificationsPage from './pages/dashboard/Notifications';
+import Profile from './pages/dashboard/Profile';
+import Settings from './pages/dashboard/Settings';
+
 function App() {
   const basePath = import.meta.env.BASE_URL.replace(/\/$/, '');
   
@@ -50,6 +60,17 @@ function App() {
         <Route path="/register/client" element={<ClientRegister />} />
         <Route path="/register/lawyer" element={<LawyerRegister />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        
+        {/* Dashboard Routes */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<Dashboard />} />
+          <Route path="appointments" element={<Appointments />} />
+          <Route path="documents" element={<Documents />} />
+          <Route path="calendar" element={<CalendarPage />} />
+          <Route path="notifications" element={<NotificationsPage />} />
+          <Route path="profile" element={<Profile />} />
+          <Route path="settings" element={<Settings />} />
+        </Route>
         
         <Route path="*" element={<NotFound />} />
       </Routes>

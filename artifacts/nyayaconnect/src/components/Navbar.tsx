@@ -62,6 +62,9 @@ const Navbar = () => {
             <Link to="/login" className="font-sans text-sm font-medium text-white hover:text-[#D4AF37] transition-colors px-4 py-2">
               Login
             </Link>
+            <Link to="/dashboard" className="font-sans text-sm font-medium text-[#D4AF37] hover:text-[#c4a133] transition-colors px-4 py-2">
+              Dashboard
+            </Link>
             <Link to="/register" className="bg-[#D4AF37] hover:bg-[#c4a133] text-[#102542] font-sans text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transform hover:-translate-y-0.5">
               Register
             </Link>
@@ -100,6 +103,9 @@ const Navbar = () => {
               <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-[#D4AF37]/10">
                 <Link to="/login" className="font-sans text-base font-medium text-white hover:text-[#D4AF37] transition-colors py-2 text-left block" onClick={() => setMobileMenuOpen(false)}>
                   Login
+                </Link>
+                <Link to="/dashboard" className="font-sans text-base font-medium text-[#D4AF37] hover:text-white transition-colors py-2 text-left block" onClick={() => setMobileMenuOpen(false)}>
+                  Dashboard
                 </Link>
                 <Link to="/register" className="bg-[#D4AF37] text-[#102542] font-sans text-base font-semibold px-6 py-3 rounded-xl transition-colors text-center block" onClick={() => setMobileMenuOpen(false)}>
                   Register
