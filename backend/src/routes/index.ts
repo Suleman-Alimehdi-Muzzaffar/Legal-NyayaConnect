@@ -1,0 +1,48 @@
+import { Router, type IRouter } from "express";
+import healthRouter from "./health";
+import servicesRouter from "./services";
+import lawyersRouter from "./lawyers";
+import appointmentsRouter from "./appointments";
+import documentsRouter from "./documents";
+import notificationsRouter from "./notifications";
+import lawyerRouter from "./lawyer";
+import authRouter from "./auth";
+import googleRouter from "./google";
+import contactRouter from "./contact";
+import verificationRouter from "./verification";
+import accountRouter from "./account";
+import dataExportsRouter from "./dataExports";
+import messagesRouter from "./messages";
+import chatRouter from "./chat";
+import sitemapRouter from "./sitemap";
+import pushRouter from "./push";
+import auditRouter from "./audit";
+import matchRouter from "./match";
+import analyticsRouter from "./analytics";
+import reviewModerationRouter from "./reviewModeration";
+
+const router: IRouter = Router();
+
+router.use(healthRouter);
+router.use(servicesRouter);
+router.use(lawyersRouter);
+router.use(appointmentsRouter);
+router.use(documentsRouter);
+router.use(notificationsRouter);
+router.use(lawyerRouter);
+router.use(authRouter);
+router.use(googleRouter);
+router.use(contactRouter);
+router.use(verificationRouter);
+router.use(accountRouter);
+router.use(dataExportsRouter);
+router.use(messagesRouter);
+router.use(chatRouter);
+router.use(sitemapRouter);
+router.use(pushRouter);
+router.use(auditRouter);
+router.use(matchRouter);
+router.use(analyticsRouter);
+router.use(reviewModerationRouter);
+
+export default router;

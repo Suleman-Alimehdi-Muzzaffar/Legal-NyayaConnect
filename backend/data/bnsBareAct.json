@@ -1,0 +1,7 @@
+[
+  { "id": "bns-103", "act": "BNS", "section": "103", "title": "Murder", "text": "Whoever causes death with intention — punishment death or imprisonment for life. (Old IPC 302)" },
+  { "id": "bns-85", "act": "BNS", "section": "85", "title": "Cruelty by husband/relatives", "text": "Cruelty as defined — punishment up to 3 years. (Old IPC 498A)" },
+  { "id": "bnss-482", "act": "BNSS", "section": "482", "title": "Anticipatory bail", "text": "Directions for grant of bail when person apprehends arrest. (Old CrPC 438)" },
+  { "id": "bsa-39", "act": "BSA", "section": "39", "title": "Expert opinion", "text": "Opinions of experts upon point of foreign law, science, art relevant. (Old Evidence 45)" },
+  { "id": "bsa-63", "act": "BSA", "section": "63", "title": "Admissibility of electronic records", "text": "Electronic records admissible with certificate. (Old Evidence 65B)" }
+]

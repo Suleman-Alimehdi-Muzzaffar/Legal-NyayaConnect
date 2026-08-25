@@ -27,6 +27,23 @@ node_modules
 !.vscode/launch.json
 !.vscode/extensions.json
 
+# env files
+.env
+.env.*
+!.env.example
+
+# runtime secrets (google oauth refresh tokens)
+backend/data/google-tokens.json
+
+# contact form file attachments
+backend/data/uploads
+
+# lawyer verification uploads
+backend/data/verification-uploads
+
+# client/lawyer document uploads
+backend/data/document-uploads
+
 # misc
 /.sass-cache
 /connect.lock
@@ -47,3 +64,4 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+backend/data/avatars

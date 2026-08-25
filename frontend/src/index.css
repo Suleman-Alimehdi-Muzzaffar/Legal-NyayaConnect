@@ -1,0 +1,263 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800;900&family=Poppins:wght@300;400;500;600;700&display=swap');
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: hsl(var(--background));
+  --color-foreground: hsl(var(--foreground));
+  --color-border: hsl(var(--border));
+  --color-input: hsl(var(--input));
+  --color-ring: hsl(var(--ring));
+
+  --color-card: hsl(var(--card));
+  --color-card-foreground: hsl(var(--card-foreground));
+  --color-card-border: hsl(var(--card-border));
+
+  --color-popover: hsl(var(--popover));
+  --color-popover-foreground: hsl(var(--popover-foreground));
+  --color-popover-border: hsl(var(--popover-border));
+
+  --color-primary: hsl(var(--primary));
+  --color-primary-foreground: hsl(var(--primary-foreground));
+  --color-primary-border: var(--primary-border);
+
+  --color-secondary: hsl(var(--secondary));
+  --color-secondary-foreground: hsl(var(--secondary-foreground));
+  --color-secondary-border: var(--secondary-border);
+
+  --color-muted: hsl(var(--muted));
+  --color-muted-foreground: hsl(var(--muted-foreground));
+  --color-muted-border: var(--muted-border);
+
+  --color-accent: hsl(var(--accent));
+  --color-accent-foreground: hsl(var(--accent-foreground));
+  --color-accent-border: var(--accent-border);
+
+  --color-destructive: hsl(var(--destructive));
+  --color-destructive-foreground: hsl(var(--destructive-foreground));
+  --color-destructive-border: var(--destructive-border);
+
+  --font-sans: 'Poppins', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  /* Defaulting to dark mode palette (NyayaConnect) */
+  --background: 215 61% 16%; /* #102542 */
+  --foreground: 0 0% 100%; /* #FFFFFF */
+
+  --border: 46 65% 52% / 0.2; /* rgba(212, 175, 55, 0.2) */
+  --input: 215 61% 25%;
+  --ring: 46 65% 52%; /* Gold */
+
+  --card: 215 61% 20%;
+  --card-foreground: 0 0% 100%;
+  --card-border: 46 65% 52% / 0.2;
+
+  --popover: 215 61% 11%;
+  --popover-foreground: 0 0% 100%;
+  --popover-border: 46 65% 52% / 0.2;
+
+  --primary: 46 65% 52%; /* #D4AF37 Gold */
+  --primary-foreground: 215 61% 16%; /* Dark Navy text on gold */
+
+  --secondary: 215 61% 25%; /* Lighter Navy */
+  --secondary-foreground: 0 0% 100%;
+
+  --muted: 215 61% 20%;
+  --muted-foreground: 0 0% 90%; /* Light Gray */
+
+  --accent: 46 65% 52%;
+  --accent-foreground: 215 61% 16%;
+
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+
+  --radius: 0.75rem;
+
+  --opaque-button-border-intensity: 9;
+
+  --elevate-1: rgba(255, 255, 255, 0.04);
+  --elevate-2: rgba(255, 255, 255, 0.09);
+
+  /* Fallback borders */
+  --primary-border: hsl(from hsl(var(--primary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --secondary-border: hsl(from hsl(var(--secondary)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --muted-border: hsl(from hsl(var(--muted)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --accent-border: hsl(from hsl(var(--accent)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+  --destructive-border: hsl(from hsl(var(--destructive)) h s calc(l + var(--opaque-button-border-intensity)) / alpha);
+}
+
+.dark {
+  /* Site is permanently dark mode, so we just duplicate */
+  --background: 215 61% 16%;
+  --foreground: 0 0% 100%;
+  --border: 46 65% 52% / 0.2;
+  --input: 215 61% 25%;
+  --ring: 46 65% 52%;
+  --card: 215 61% 20%;
+  --card-foreground: 0 0% 100%;
+  --card-border: 46 65% 52% / 0.2;
+  --popover: 215 61% 11%;
+  --popover-foreground: 0 0% 100%;
+  --popover-border: 46 65% 52% / 0.2;
+  --primary: 46 65% 52%;
+  --primary-foreground: 215 61% 16%;
+  --secondary: 215 61% 25%;
+  --secondary-foreground: 0 0% 100%;
+  --muted: 215 61% 20%;
+  --muted-foreground: 0 0% 90%;
+  --accent: 46 65% 52%;
+  --accent-foreground: 215 61% 16%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply font-sans antialiased bg-background text-foreground;
+    background-color: #102542;
+    color: #FFFFFF;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+}
+
+.gold-glow {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.3);
+}
+
+.gold-gradient-text {
+  background: linear-gradient(to right, #D4AF37, #FFF5D1, #D4AF37);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+}
+
+/* ------------------------------------------------------------------ */
+/* Light theme (client portal) — navy & gold on warm paper              */
+/* ------------------------------------------------------------------ */
+[data-theme="light"] {
+  --background: 46 45% 96%; /* #F9F5EA warm paper */
+  --foreground: 0 0% 0%; /* #000 black */
+
+  --border: 46 40% 85%; /* soft gold border */
+  --input: 46 35% 88%;
+  --ring: 46 65% 52%; /* Gold */
+
+  --card: 0 0% 100%;
+  --card-foreground: 0 0% 0%;
+  --card-border: 46 40% 85%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 0 0% 0%;
+  --popover-border: 46 40% 85%;
+
+  --primary: 46 65% 52%;
+  --primary-foreground: 0 0% 0%;
+
+  --secondary: 46 30% 91%;
+  --secondary-foreground: 0 0% 0%;
+
+  --muted: 46 30% 91%;
+  --muted-foreground: 0 0% 0%;
+
+  --accent: 46 65% 52%;
+  --accent-foreground: 0 0% 0%;
+
+  --destructive: 0 84% 55%;
+  --destructive-foreground: 0 0% 100%;
+
+  --elevate-1: rgba(16, 37, 66, 0.05);
+  --elevate-2: rgba(16, 37, 66, 0.1);
+}
+
+[data-theme="light"] body {
+  background-color: #f9f5ea;
+  color: #000000;
+}
+
+[data-theme="light"] .glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(16, 37, 66, 0.1);
+  box-shadow: 0 8px 32px rgba(16, 37, 66, 0.1);
+}
+
+/* Base recolor: dark utilities -> black text on warm paper */
+[data-theme="light"] .text-white { color: #000000; }
+[data-theme="light"] .text-gray-100 { color: #000000; }
+[data-theme="light"] .text-gray-200 { color: #000000; }
+[data-theme="light"] .text-gray-300 { color: #000000; }
+[data-theme="light"] .text-gray-400 { color: #000000; }
+[data-theme="light"] .text-gray-500 { color: #000000; }
+[data-theme="light"] .text-gray-600 { color: #000000; }
+[data-theme="light"] .text-gray-700 { color: #000000; }
+[data-theme="light"] .text-white\/80 { color: rgba(0, 0, 0, 0.8); }
+[data-theme="light"] .bg-white\/5 { background-color: rgba(16, 37, 66, 0.05); }
+[data-theme="light"] .bg-white\/10 { background-color: rgba(16, 37, 66, 0.09); }
+[data-theme="light"] .bg-white\/20 { background-color: rgba(16, 37, 66, 0.12); }
+[data-theme="light"] .bg-white\/\[0\.02\] { background-color: rgba(255, 255, 255, 0.6); }
+[data-theme="light"] .border-white\/5 { border-color: rgba(16, 37, 66, 0.08); }
+[data-theme="light"] .border-white\/10 { border-color: rgba(16, 37, 66, 0.12); }
+[data-theme="light"] .border-white\/20 { border-color: rgba(16, 37, 66, 0.18); }
+[data-theme="light"] .border-white\/30 { border-color: rgba(16, 37, 66, 0.26); }
+[data-theme="light"] .hover\:bg-white\/5:hover { background-color: rgba(16, 37, 66, 0.07); }
+[data-theme="light"] .hover\:bg-white\/10:hover { background-color: rgba(16, 37, 66, 0.12); }
+[data-theme="light"] .hover\:bg-white\/20:hover { background-color: rgba(16, 37, 66, 0.16); }
+[data-theme="light"] .hover\:border-white\/20:hover { border-color: rgba(16, 37, 66, 0.25); }
+[data-theme="light"] .hover\:border-white\/60:hover { border-color: rgba(16, 37, 66, 0.5); }
+[data-theme="light"] .divide-white\/10 > :not([hidden]) ~ :not([hidden]) { border-color: rgba(16, 37, 66, 0.12); }
+[data-theme="light"] .placeholder-gray-500::placeholder { color: #9aa3b5; }
+
+/* Brand navy hardcoded surfaces */
+[data-theme="light"] .bg-\[\#102542\] { background-color: #f9f5ea; }
+[data-theme="light"] .bg-\[\#102542\]\/80 { background-color: rgba(249, 245, 234, 0.85); }
+[data-theme="light"] .bg-\[\#102542\]\/90 { background-color: rgba(249, 245, 234, 0.92); }
+[data-theme="light"] .bg-\[\#0a1929\] { background-color: #f3eedf; }
+[data-theme="light"] .text-\[\#102542\] { color: #000000; }
+[data-theme="light"] .border-\[\#102542\] { border-color: #102542; }
+[data-theme="light"] .ring-\[\#102542\] { --tw-ring-color: #102542; }
+
+/* Full-page navy gradients (Home, Login, Register, etc.) -> warm paper */
+[data-theme="light"] .from-\[\#0a1a2e\] { --tw-gradient-from: #f9f5ea; }
+[data-theme="light"] .via-\[\#102542\] { --tw-gradient-via: #f3eedf; }
+[data-theme="light"] .to-\[\#0a1a2e\] {
+  --tw-gradient-to: #f9f5ea;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-via, var(--tw-gradient-from)), var(--tw-gradient-to);
+}
+
+/* Keep white text on colored surfaces (avatars, dots, buttons, overlays) */
+[data-theme="light"] .bg-gradient-to-br .text-white { color: #ffffff; }
+[data-theme="light"] .bg-black\/50.text-white,
+[data-theme="light"] .bg-red-500\/80.text-white,
+[data-theme="light"] .bg-red-500.text-white,
+[data-theme="light"] .bg-purple-500.text-white,
+[data-theme="light"] .bg-green-500.text-white,
+[data-theme="light"] .bg-blue-500.text-white { color: #ffffff; }
+[data-theme="light"] .hover\:bg-red-500:hover.text-white { color: #ffffff; }

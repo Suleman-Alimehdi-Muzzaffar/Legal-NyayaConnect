@@ -1,0 +1,2319 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: services
+    description: Legal service categories
+  - name: lawyers
+    description: Lawyer directory and profiles
+  - name: appointments
+    description: Client appointments
+  - name: documents
+    description: Client documents
+  - name: notifications
+    description: Client notifications and activity feed
+  - name: lawyer
+    description: Lawyer dashboard
+  - name: auth
+    description: Authentication
+  - name: contact
+    description: Contact form
+  - name: verification
+    description: Lawyer document verification
+  - name: admin
+    description: Admin review operations
+  - name: google
+    description: Google Calendar integration
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      description: Returns server health status
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /services:
+    get:
+      operationId: listServices
+      tags: [services]
+      summary: List legal services
+      description: Returns all legal service categories offered on the platform.
+      responses:
+        "200":
+          description: List of services
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Service"
+
+  /services/{slug}:
+    get:
+      operationId: getServiceBySlug
+      tags: [services]
+      summary: Get a service by slug
+      description: Returns a single legal service category identified by its slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Service found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Service"
+        "404":
+          description: Service not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /lawyers:
+    get:
+      operationId: listLawyers
+      tags: [lawyers]
+      summary: List lawyers
+      description: Returns lawyers filtered by the provided query parameters.
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+        - name: city
+          in: query
+          schema:
+            type: string
+        - name: state
+          in: query
+          schema:
+            type: string
+        - name: specialization
+          in: query
+          schema:
+            type: string
+        - name: availability
+          in: query
+          schema:
+            type: string
+            enum: [online, offline, both]
+        - name: minRating
+          in: query
+          schema:
+            type: number
+        - name: maxFee
+          in: query
+          schema:
+            type: number
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [relevance, rating_desc, exp_desc, fee_asc, fee_desc]
+      responses:
+        "200":
+          description: List of lawyers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Lawyer"
+
+  /lawyers/{slug}:
+    get:
+      operationId: getLawyerBySlug
+      tags: [lawyers]
+      summary: Get a lawyer by slug
+      description: Returns the full profile of a lawyer identified by their slug.
+      parameters:
+        - name: slug
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Lawyer found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Lawyer"
+        "404":
+          description: Lawyer not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /appointments:
+    get:
+      operationId: listAppointments
+      tags: [appointments]
+      summary: List client appointments
+      description: Returns the appointments booked by the signed-in client.
+      responses:
+        "200":
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Appointment"
+    post:
+      operationId: createAppointment
+      tags: [appointments]
+      summary: Book an appointment
+      description: Books a new consultation appointment.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppointmentInput"
+      responses:
+        "201":
+          description: Appointment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /appointments/{id}:
+    patch:
+      operationId: updateAppointment
+      tags: [appointments]
+      summary: Update an appointment
+      description: Updates an existing appointment (e.g. status change or reschedule).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppointmentUpdate"
+      responses:
+        "200":
+          description: Appointment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Appointment"
+        "404":
+          description: Appointment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /appointments/{id}/meet:
+    post:
+      operationId: createAppointmentMeet
+      tags: [appointments]
+      summary: Create a Google Meet link for an appointment
+      description: Creates a Google Calendar event with a Google Meet conference and saves the hangout link on the appointment.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AppointmentMeetRequest"
+      responses:
+        "200":
+          description: Meet link created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AppointmentMeetResponse"
+        "404":
+          description: Appointment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Google Calendar not connected
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Google Calendar not configured on the server
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents:
+    get:
+      operationId: listDocuments
+      tags: [documents]
+      summary: List client documents
+      description: Returns the documents uploaded by the signed-in client.
+      responses:
+        "200":
+          description: List of documents
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Document"
+    post:
+      operationId: createDocument
+      tags: [documents]
+      summary: Upload a document
+      description: Registers a new document against the signed-in client's account.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentInput"
+      responses:
+        "201":
+          description: Document created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /documents/{id}:
+    patch:
+      operationId: updateDocument
+      tags: [documents]
+      summary: Update a document
+      description: Updates metadata or review status of a document.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DocumentUpdate"
+      responses:
+        "200":
+          description: Document updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Document"
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    delete:
+      operationId: deleteDocument
+      tags: [documents]
+      summary: Delete a document
+      description: Deletes a document from the signed-in client's account.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Document deleted
+        "404":
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+
+  /notifications:
+    get:
+      operationId: listNotifications
+      tags: [notifications]
+      summary: List client notifications
+      description: Returns the notifications for the signed-in client.
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Notification"
+
+  /notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      tags: [notifications]
+      summary: Mark a notification as read
+      description: Marks a single client notification as read.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Notification updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Notification"
+        "404":
+          description: Notification not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /activities:
+    get:
+      operationId: listActivities
+      tags: [notifications]
+      summary: List client activity feed
+      description: Returns the recent activity feed for the signed-in client.
+      responses:
+        "200":
+          description: List of activities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Activity"
+
+  /lawyer/dashboard:
+    get:
+      operationId: getLawyerDashboard
+      tags: [lawyer]
+      summary: Get lawyer profile summary
+      description: Returns the profile summary of the signed-in lawyer.
+      responses:
+        "200":
+          description: Lawyer profile summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LawyerProfileSummary"
+
+  /lawyer/clients:
+    get:
+      operationId: listLawyerClients
+      tags: [lawyer]
+      summary: List lawyer clients
+      description: Returns the clients of the signed-in lawyer.
+      responses:
+        "200":
+          description: List of clients
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Client"
+    post:
+      operationId: createLawyerClient
+      tags: [lawyer]
+      summary: Add a client
+      description: Creates a new client for the signed-in lawyer.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ClientInput"
+      responses:
+        "201":
+          description: Client created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Client"
+        "400":
+          description: Invalid client payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /lawyer/appointments:
+    get:
+      operationId: listLawyerAppointments
+      tags: [lawyer]
+      summary: List lawyer appointments
+      description: Returns the appointments of the signed-in lawyer.
+      responses:
+        "200":
+          description: List of appointments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LawyerAppointment"
+    post:
+      operationId: createLawyerAppointment
+      tags: [lawyer]
+      summary: Create a lawyer appointment
+      description: Books a new appointment for one of the lawyer's clients.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LawyerAppointmentInput"
+      responses:
+        "201":
+          description: Appointment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LawyerAppointment"
+        "400":
+          description: Invalid appointment payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /lawyer/appointments/{id}:
+    patch:
+      operationId: updateLawyerAppointment
+      tags: [lawyer]
+      summary: Update a lawyer appointment
+      description: Updates the status or payment state of one of the lawyer's appointments.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LawyerAppointmentUpdate"
+      responses:
+        "200":
+          description: Appointment updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LawyerAppointment"
+        "404":
+          description: Appointment not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /lawyer/hearings:
+    get:
+      operationId: listLawyerHearings
+      tags: [lawyer]
+      summary: List lawyer hearings
+      description: Returns upcoming and past court hearings of the signed-in lawyer.
+      responses:
+        "200":
+          description: List of hearings
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Hearing"
+
+  /lawyer/analytics:
+    get:
+      operationId: getLawyerAnalytics
+      tags: [lawyer]
+      summary: Get lawyer analytics
+      description: Returns revenue, case mix, appointment and rating trend data for the signed-in lawyer.
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LawyerAnalytics"
+
+  /lawyer/notifications:
+    get:
+      operationId: listLawyerNotifications
+      tags: [lawyer]
+      summary: List lawyer notifications
+      description: Returns the notifications for the signed-in lawyer.
+      responses:
+        "200":
+          description: List of notifications
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LawyerNotification"
+
+  /lawyer/reviews:
+    get:
+      operationId: listLawyerReviews
+      tags: [lawyer]
+      summary: List lawyer reviews
+      description: Returns the client reviews received by the signed-in lawyer.
+      responses:
+        "200":
+          description: List of reviews
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Review"
+
+  /auth/register:
+    post:
+      operationId: register
+      tags: [auth]
+      summary: Register a new user
+      description: Creates a client or lawyer account and returns an auth token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterInput"
+      responses:
+        "201":
+          description: User created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Sign in an existing user
+      description: Authenticates a client or lawyer and returns an auth token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthResponse"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/forgot-password:
+    post:
+      operationId: forgotPassword
+      tags: [auth]
+      summary: Request a password reset
+      description: Accepts an email address and returns a confirmation message.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ForgotPasswordInput"
+      responses:
+        "200":
+          description: Reset requested
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+
+  /auth/password:
+    patch:
+      operationId: changePassword
+      tags: [auth]
+      summary: Change the signed-in user's password
+      description: Verifies the current password and updates it in the database. Requires the session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeInput"
+      responses:
+        "200":
+          description: Password updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing/invalid session token or incorrect current password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /account:
+    delete:
+      operationId: deleteAccount
+      tags: [auth]
+      summary: Delete the signed-in account
+      description: Permanently deletes the signed-in user and all associated data (documents, appointments, verification, profiles). Requires the session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeleteAccountInput"
+      responses:
+        "200":
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "401":
+          description: Missing or invalid session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "403":
+          description: Email does not match the signed-in account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /account/visibility:
+    get:
+      operationId: getAccountVisibility
+      tags: [auth]
+      summary: Get the signed-in account's profile visibility
+      description: Returns the saved profile visibility (public, lawyers_only, private) for the signed-in user. Requires the session token.
+      responses:
+        "200":
+          description: Saved visibility
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountVisibility"
+        "401":
+          description: Missing or invalid session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+    put:
+      operationId: updateAccountVisibility
+      tags: [auth]
+      summary: Update the signed-in account's profile visibility
+      description: Persists the profile visibility for the signed-in user and mirrors it to the lawyer portal client roster (private hides the client from lawyer views). Requires the session token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AccountVisibilityInput"
+      responses:
+        "200":
+          description: Visibility updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AccountVisibility"
+        "400":
+          description: Invalid payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Missing or invalid session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /data-exports:
+    post:
+      operationId: createDataExportRequest
+      tags: [data-export]
+      summary: Request a personal data export
+      description: Creates a pending data export request for the signed-in user. The request must be granted by an admin before the user can download their data. Requires the session token.
+      responses:
+        "200":
+          description: Data export request created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataExport"
+        "401":
+          description: Missing or invalid session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: A data export request is already pending
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /data-exports/me:
+    get:
+      operationId: getMyDataExports
+      tags: [data-export]
+      summary: List the signed-in user's data export requests
+      description: Returns all data export requests made by the signed-in user. Requires the session token.
+      responses:
+        "200":
+          description: Data export requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataExport"
+        "401":
+          description: Missing or invalid session token
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/data-exports:
+    get:
+      operationId: listDataExports
+      tags: [admin]
+      summary: List data export requests
+      description: Lists all personal data export requests. Requires the admin key.
+      parameters:
+        - name: x-admin-key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Data export requests
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/DataExport"
+        "401":
+          description: Invalid or missing admin key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Admin review not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/data-exports/{id}/review:
+    post:
+      operationId: reviewDataExport
+      tags: [admin]
+      summary: Grant or deny a data export request
+      description: Grants or denies a pending data export request. Requires the admin key.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-admin-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DataExportReviewInput"
+      responses:
+        "200":
+          description: Updated data export request
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DataExport"
+        "400":
+          description: Invalid review payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid or missing admin key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Data export request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Admin review not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/google:
+    get:
+      operationId: googleAuthStart
+      tags: [google]
+      summary: Start Google OAuth consent flow
+      description: Returns the Google consent URL that a lawyer must visit to connect their Google Calendar.
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Authorization URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoogleConnectResponse"
+        "503":
+          description: Google Calendar not configured on the server
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /auth/google/callback:
+    get:
+      operationId: googleAuthCallback
+      tags: [google]
+      summary: Google OAuth callback
+      description: Exchanges the OAuth code for tokens and redirects back to the lawyer dashboard.
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoogleStatusResponse"
+
+  /auth/google/status:
+    get:
+      operationId: googleAuthStatus
+      tags: [google]
+      summary: Check Google Calendar connection status
+      description: Returns whether the given user has connected their Google Calendar.
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Connection status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GoogleStatusResponse"
+
+  /contact:
+    post:
+      operationId: submitContact
+      tags: [contact]
+      summary: Submit a contact form
+      description: Stores a contact form submission from the public contact page.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ContactInput"
+      responses:
+        "201":
+          description: Message received
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MessageResponse"
+        "400":
+          description: Invalid request body
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /verification/status:
+    get:
+      operationId: getVerificationStatus
+      tags: [verification]
+      summary: Get lawyer verification status
+      description: Returns the current verification status for a lawyer's email.
+      parameters:
+        - name: email
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Verification status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationStatus"
+        "404":
+          description: No verification request found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/verifications:
+    get:
+      operationId: listVerifications
+      tags: [admin]
+      summary: List lawyer verification submissions
+      description: Lists all lawyer verification submissions. Requires the admin key.
+      parameters:
+        - name: x-admin-key
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Verification submissions
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/VerificationStatus"
+        "401":
+          description: Invalid or missing admin key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Admin review not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /admin/verifications/{id}/review:
+    post:
+      operationId: reviewVerification
+      tags: [admin]
+      summary: Approve or reject a verification submission
+      description: Approves or rejects a lawyer verification submission. Requires the admin key.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+        - name: x-admin-key
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerificationReviewInput"
+      responses:
+        "200":
+          description: Updated verification status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/VerificationStatus"
+        "400":
+          description: Invalid review payload
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "401":
+          description: Invalid or missing admin key
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Verification request not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Admin review not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required:
+        - status
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
+
+    Service:
+      type: object
+      properties:
+        slug:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        documents:
+          type: array
+          items:
+            type: string
+        fee:
+          type: string
+        lawyerName:
+          type: string
+        lawyerSpec:
+          type: string
+        svgType:
+          type: string
+      required:
+        - slug
+        - name
+        - description
+        - documents
+        - fee
+        - lawyerName
+        - lawyerSpec
+        - svgType
+
+    Education:
+      type: object
+      properties:
+        degree:
+          type: string
+        institution:
+          type: string
+        year:
+          type: number
+      required:
+        - degree
+        - institution
+        - year
+
+    Review:
+      type: object
+      properties:
+        id:
+          type: string
+        author:
+          type: string
+        rating:
+          type: number
+        date:
+          type: string
+        comment:
+          type: string
+        caseType:
+          type: string
+      required:
+        - id
+        - author
+        - rating
+        - date
+        - comment
+        - caseType
+
+    AvailableSlot:
+      type: object
+      properties:
+        date:
+          type: string
+        slots:
+          type: array
+          items:
+            type: string
+      required:
+        - date
+        - slots
+
+    Lawyer:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        avatar:
+          type: string
+        avatarGradient:
+          type: string
+        specializations:
+          type: array
+          items:
+            type: string
+        primarySpecialization:
+          type: string
+        experience:
+          type: number
+        rating:
+          type: number
+        reviewCount:
+          type: number
+        city:
+          type: string
+        state:
+          type: string
+        languages:
+          type: array
+          items:
+            type: string
+        consultationFee:
+          type: number
+        availability:
+          type: string
+          enum: [online, offline, both]
+        isVerified:
+          type: boolean
+        isPremium:
+          type: boolean
+        casesWon:
+          type: number
+        totalCases:
+          type: number
+        bio:
+          type: string
+        education:
+          type: array
+          items:
+            $ref: "#/components/schemas/Education"
+        courtRegistrations:
+          type: array
+          items:
+            type: string
+        officeAddress:
+          type: string
+        phone:
+          type: string
+        email:
+          type: string
+        awards:
+          type: array
+          items:
+            type: string
+        reviewsList:
+          type: array
+          items:
+            $ref: "#/components/schemas/Review"
+        availableSlots:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvailableSlot"
+        weeklyHours:
+          type: array
+          items:
+            type: object
+            properties:
+              day:
+                type: string
+                enum: [Monday, Tuesday, Wednesday, Thursday, Friday, Saturday, Sunday]
+              active:
+                type: boolean
+              start:
+                type: string
+              end:
+                type: string
+      required:
+        - id
+        - name
+        - slug
+        - avatar
+        - avatarGradient
+        - specializations
+        - primarySpecialization
+        - experience
+        - rating
+        - reviewCount
+        - city
+        - state
+        - languages
+        - consultationFee
+        - availability
+        - isVerified
+        - isPremium
+        - casesWon
+        - totalCases
+        - bio
+        - education
+        - courtRegistrations
+        - officeAddress
+        - phone
+        - email
+        - awards
+        - reviewsList
+        - availableSlots
+        - weeklyHours
+
+    AppointmentStatus:
+      type: string
+      enum: [upcoming, completed, cancelled, pending, rescheduled]
+
+    Appointment:
+      type: object
+      properties:
+        id:
+          type: string
+        lawyerName:
+          type: string
+        lawyerAvatar:
+          type: string
+        lawyerGradient:
+          type: string
+        specialization:
+          type: string
+        date:
+          type: string
+        time:
+          type: string
+        duration:
+          type: number
+        mode:
+          type: string
+          enum: [online, offline]
+        status:
+          $ref: "#/components/schemas/AppointmentStatus"
+        caseType:
+          type: string
+        notes:
+          type: string
+        fee:
+          type: number
+        meetLink:
+          type: string
+      required:
+        - id
+        - lawyerName
+        - lawyerAvatar
+        - lawyerGradient
+        - specialization
+        - date
+        - time
+        - duration
+        - mode
+        - status
+        - caseType
+        - notes
+        - fee
+
+    AppointmentInput:
+      type: object
+      properties:
+        lawyerName:
+          type: string
+        lawyerAvatar:
+          type: string
+        lawyerGradient:
+          type: string
+        specialization:
+          type: string
+        date:
+          type: string
+        time:
+          type: string
+        duration:
+          type: number
+        mode:
+          type: string
+          enum: [online, offline]
+        caseType:
+          type: string
+        notes:
+          type: string
+        fee:
+          type: number
+        meetLink:
+          type: string
+      required:
+        - lawyerName
+        - lawyerAvatar
+        - lawyerGradient
+        - specialization
+        - date
+        - time
+        - duration
+        - mode
+        - caseType
+        - notes
+        - fee
+
+    AppointmentUpdate:
+      type: object
+      properties:
+        date:
+          type: string
+        time:
+          type: string
+        duration:
+          type: number
+        mode:
+          type: string
+          enum: [online, offline]
+        status:
+          $ref: "#/components/schemas/AppointmentStatus"
+        caseType:
+          type: string
+        notes:
+          type: string
+        meetLink:
+          type: string
+
+    DocumentType:
+      type: string
+      enum: [pdf, doc, image, contract]
+
+    DocumentStatus:
+      type: string
+      enum: [pending_review, reviewed, approved, rejected]
+
+    Document:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/DocumentType"
+        category:
+          type: string
+        uploadedAt:
+          type: string
+        size:
+          type: string
+        status:
+          $ref: "#/components/schemas/DocumentStatus"
+        lawyerName:
+          type: string
+        caseId:
+          type: string
+        fileName:
+          type: string
+      required:
+        - id
+        - name
+        - type
+        - category
+        - uploadedAt
+        - size
+        - status
+
+    DocumentInput:
+      type: object
+      properties:
+        name:
+          type: string
+        type:
+          $ref: "#/components/schemas/DocumentType"
+        category:
+          type: string
+        size:
+          type: string
+      required:
+        - name
+        - type
+        - category
+        - size
+
+    DocumentUpdate:
+      type: object
+      properties:
+        category:
+          type: string
+        status:
+          $ref: "#/components/schemas/DocumentStatus"
+        lawyerName:
+          type: string
+        caseId:
+          type: string
+
+    NotificationType:
+      type: string
+      enum: [appointment, document, message, reminder, system]
+
+    Notification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/NotificationType"
+        title:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+        isRead:
+          type: boolean
+        actionLabel:
+          type: string
+        actionLink:
+          type: string
+      required:
+        - id
+        - type
+        - title
+        - message
+        - timestamp
+        - isRead
+
+    ActivityType:
+      type: string
+      enum: [appointment_booked, document_uploaded, appointment_completed, message_received, document_approved]
+
+    Activity:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/ActivityType"
+        description:
+          type: string
+        timestamp:
+          type: string
+        relatedEntity:
+          type: string
+        icon:
+          type: string
+      required:
+        - id
+        - type
+        - description
+        - timestamp
+
+    ClientStatus:
+      type: string
+      enum: [active, closed, pending]
+
+    ClientVisibility:
+      type: string
+      enum: [public, lawyers_only, private]
+
+    Client:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        initials:
+          type: string
+        gradient:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        city:
+          type: string
+        caseType:
+          type: string
+        status:
+          $ref: "#/components/schemas/ClientStatus"
+        visibility:
+          $ref: "#/components/schemas/ClientVisibility"
+        lastContact:
+          type: string
+        totalSessions:
+          type: number
+        amountPaid:
+          type: number
+        nextAppointment:
+          type: string
+        notes:
+          type: string
+      required:
+        - id
+        - name
+        - initials
+        - gradient
+        - email
+        - phone
+        - city
+        - caseType
+        - status
+        - lastContact
+        - totalSessions
+        - amountPaid
+        - notes
+
+    AccountVisibilityInput:
+      type: object
+      properties:
+        visibility:
+          $ref: "#/components/schemas/ClientVisibility"
+      required:
+        - visibility
+
+    AccountVisibility:
+      type: object
+      properties:
+        visibility:
+          $ref: "#/components/schemas/ClientVisibility"
+      required:
+        - visibility
+
+    DataExportStatus:
+      type: string
+      enum: [pending, granted, denied]
+
+    DataExport:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        userName:
+          type: string
+        status:
+          $ref: "#/components/schemas/DataExportStatus"
+        requestedAt:
+          type: string
+        decidedAt:
+          type: string
+        reason:
+          type: string
+      required:
+        - id
+        - email
+        - userName
+        - status
+        - requestedAt
+
+    DataExportReviewInput:
+      type: object
+      properties:
+        status:
+          $ref: "#/components/schemas/DataExportStatus"
+        reason:
+          type: string
+      required:
+        - status
+
+    ClientInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        city:
+          type: string
+        caseType:
+          type: string
+        status:
+          $ref: "#/components/schemas/ClientStatus"
+        lastContact:
+          type: string
+        totalSessions:
+          type: number
+        amountPaid:
+          type: number
+        notes:
+          type: string
+      required:
+        - name
+        - email
+        - phone
+        - city
+        - caseType
+        - status
+        - notes
+
+    LawyerAppointmentStatus:
+      type: string
+      enum: [upcoming, completed, cancelled, pending]
+
+    LawyerAppointment:
+      type: object
+      properties:
+        id:
+          type: string
+        clientName:
+          type: string
+        clientInitials:
+          type: string
+        clientGradient:
+          type: string
+        caseType:
+          type: string
+        date:
+          type: string
+        time:
+          type: string
+        duration:
+          type: number
+        mode:
+          type: string
+          enum: [online, offline]
+        status:
+          $ref: "#/components/schemas/LawyerAppointmentStatus"
+        fee:
+          type: number
+        isPaid:
+          type: boolean
+        notes:
+          type: string
+        meetLink:
+          type: string
+      required:
+        - id
+        - clientName
+        - clientInitials
+        - clientGradient
+        - caseType
+        - date
+        - time
+        - duration
+        - mode
+        - status
+        - fee
+        - isPaid
+        - notes
+
+    LawyerAppointmentUpdate:
+      type: object
+      properties:
+        date:
+          type: string
+        time:
+          type: string
+        duration:
+          type: number
+        mode:
+          type: string
+          enum: [online, offline]
+        status:
+          $ref: "#/components/schemas/LawyerAppointmentStatus"
+        isPaid:
+          type: boolean
+        notes:
+          type: string
+        meetLink:
+          type: string
+
+    LawyerAppointmentInput:
+      type: object
+      properties:
+        clientName:
+          type: string
+        clientInitials:
+          type: string
+        clientGradient:
+          type: string
+        caseType:
+          type: string
+        date:
+          type: string
+        time:
+          type: string
+        duration:
+          type: number
+        mode:
+          type: string
+          enum: [online, offline]
+        status:
+          $ref: "#/components/schemas/LawyerAppointmentStatus"
+        fee:
+          type: number
+        isPaid:
+          type: boolean
+        notes:
+          type: string
+        meetLink:
+          type: string
+      required:
+        - clientName
+        - clientInitials
+        - clientGradient
+        - caseType
+        - date
+        - time
+        - duration
+        - mode
+        - status
+        - fee
+        - isPaid
+        - notes
+
+    HearingStatus:
+      type: string
+      enum: [upcoming, adjourned, completed]
+
+    Hearing:
+      type: object
+      properties:
+        id:
+          type: string
+        caseNumber:
+          type: string
+        clientName:
+          type: string
+        caseTitle:
+          type: string
+        court:
+          type: string
+        date:
+          type: string
+        time:
+          type: string
+        room:
+          type: string
+        status:
+          $ref: "#/components/schemas/HearingStatus"
+        notes:
+          type: string
+      required:
+        - id
+        - caseNumber
+        - clientName
+        - caseTitle
+        - court
+        - date
+        - time
+        - room
+        - status
+        - notes
+
+    RevenuePoint:
+      type: object
+      properties:
+        month:
+          type: string
+        revenue:
+          type: number
+        cases:
+          type: number
+      required:
+        - month
+        - revenue
+        - cases
+
+    CaseTypeSlice:
+      type: object
+      properties:
+        name:
+          type: string
+        value:
+          type: number
+        color:
+          type: string
+      required:
+        - name
+        - value
+        - color
+
+    WeeklyAppointments:
+      type: object
+      properties:
+        week:
+          type: string
+        online:
+          type: number
+        offline:
+          type: number
+      required:
+        - week
+        - online
+        - offline
+
+    RatingPoint:
+      type: object
+      properties:
+        month:
+          type: string
+        rating:
+          type: number
+      required:
+        - month
+        - rating
+
+    LawyerAnalytics:
+      type: object
+      properties:
+        revenueData:
+          type: array
+          items:
+            $ref: "#/components/schemas/RevenuePoint"
+        caseTypeData:
+          type: array
+          items:
+            $ref: "#/components/schemas/CaseTypeSlice"
+        weeklyAppointments:
+          type: array
+          items:
+            $ref: "#/components/schemas/WeeklyAppointments"
+        ratingTrend:
+          type: array
+          items:
+            $ref: "#/components/schemas/RatingPoint"
+      required:
+        - revenueData
+        - caseTypeData
+        - weeklyAppointments
+        - ratingTrend
+
+    LawyerNotificationType:
+      type: string
+      enum: [appointment, payment, review, document, hearing, system]
+
+    LawyerNotification:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/LawyerNotificationType"
+        title:
+          type: string
+        message:
+          type: string
+        timestamp:
+          type: string
+        isRead:
+          type: boolean
+        actionLabel:
+          type: string
+        actionLink:
+          type: string
+      required:
+        - id
+        - type
+        - title
+        - message
+        - timestamp
+        - isRead
+
+    LawyerProfileSummary:
+      type: object
+      properties:
+        name:
+          type: string
+        initials:
+          type: string
+        gradient:
+          type: string
+        specialization:
+          type: string
+        city:
+          type: string
+        rating:
+          type: number
+        reviewCount:
+          type: number
+        isVerified:
+          type: boolean
+        isPremium:
+          type: boolean
+        email:
+          type: string
+        phone:
+          type: string
+        experience:
+          type: number
+        casesWon:
+          type: number
+        totalCases:
+          type: number
+        consultationFee:
+          type: number
+      required:
+        - name
+        - initials
+        - gradient
+        - specialization
+        - city
+        - rating
+        - reviewCount
+        - isVerified
+        - isPremium
+        - email
+        - phone
+        - experience
+        - casesWon
+        - totalCases
+        - consultationFee
+
+    UserRole:
+      type: string
+      enum: [client, lawyer]
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        role:
+          $ref: "#/components/schemas/UserRole"
+        city:
+          type: string
+        state:
+          type: string
+        avatar:
+          type: ["string", "null"]
+        dob:
+          type: string
+        gender:
+          type: string
+        street:
+          type: string
+        pincode:
+          type: string
+        language:
+          type: string
+        communication:
+          type: string
+        bci:
+          type: string
+        experience:
+          type: string
+        address:
+          type: string
+        fee:
+          type: string
+        bio:
+          type: string
+        practiceAreas:
+          type: array
+          items:
+            type: string
+        languages:
+          type: array
+          items:
+            type: string
+      required:
+        - id
+        - name
+        - email
+        - role
+
+    LoginInput:
+      type: object
+      properties:
+        email:
+          type: string
+        password:
+          type: string
+      required:
+        - email
+        - password
+
+    RegisterInput:
+      type: object
+      properties:
+        role:
+          $ref: "#/components/schemas/UserRole"
+        name:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+        phone:
+          type: string
+        city:
+          type: string
+        state:
+          type: string
+        language:
+          type: string
+        interests:
+          type: array
+          items:
+            type: string
+      required:
+        - role
+        - name
+        - email
+        - password
+
+    ForgotPasswordInput:
+      type: object
+      properties:
+        email:
+          type: string
+      required:
+        - email
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+      required:
+        - token
+        - user
+
+    ContactInput:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        subject:
+          type: string
+        message:
+          type: string
+      required:
+        - name
+        - email
+        - message
+
+    MessageResponse:
+      type: object
+      properties:
+        message:
+          type: string
+      required:
+        - message
+
+    DeleteAccountInput:
+      type: object
+      properties:
+        email:
+          type: string
+      required:
+        - email
+
+    PasswordChangeInput:
+      type: object
+      properties:
+        currentPassword:
+          type: string
+        newPassword:
+          type: string
+      required:
+        - currentPassword
+        - newPassword
+
+    GoogleConnectResponse:
+      type: object
+      properties:
+        authorizationUrl:
+          type: string
+      required:
+        - authorizationUrl
+
+    GoogleStatusResponse:
+      type: object
+      properties:
+        connected:
+          type: boolean
+      required:
+        - connected
+
+    AppointmentMeetRequest:
+      type: object
+      properties:
+        userId:
+          type: string
+      required:
+        - userId
+
+    AppointmentMeetResponse:
+      type: object
+      properties:
+        meetLink:
+          type: string
+      required:
+        - meetLink
+
+    VerificationFile:
+      type: object
+      properties:
+        name:
+          type: string
+        fileName:
+          type: string
+        size:
+          type: number
+        type:
+          type: string
+      required:
+        - name
+        - fileName
+        - size
+        - type
+
+    VerificationStatus:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+        name:
+          type: string
+        bciNumber:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        reason:
+          type: ["string", "null"]
+        selfie:
+          $ref: "#/components/schemas/VerificationFile"
+        documents:
+          type: array
+          items:
+            $ref: "#/components/schemas/VerificationFile"
+        submittedAt:
+          type: string
+        reviewedAt:
+          type: ["string", "null"]
+      required:
+        - id
+        - email
+        - name
+        - bciNumber
+        - status
+        - submittedAt
+        - documents
+
+    VerificationReviewInput:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [approved, rejected]
+        note:
+          type: string
+      required:
+        - status
