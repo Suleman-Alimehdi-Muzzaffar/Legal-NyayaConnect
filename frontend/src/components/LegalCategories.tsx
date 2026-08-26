@@ -9,36 +9,54 @@ import {
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { useListLawyers } from '@workspace/api-client-react';
-
-const PRACTICE_AREAS: { name: string; icon: LucideIcon }[] = [
-  { name: 'Family Law', icon: Users },
-  { name: 'Property Law', icon: Building },
-  { name: 'Criminal Law', icon: Gavel },
-  { name: 'Cyber Law', icon: Laptop },
-  { name: 'Consumer Law', icon: ShoppingCart },
-  { name: 'Corporate Law', icon: Briefcase },
-  { name: 'Immigration Law', icon: Plane },
-  { name: 'Banking Law', icon: Landmark },
-  { name: 'Tax Law', icon: FileText },
-  { name: 'Intellectual Property', icon: Shield },
-  { name: 'Labour Law', icon: FileSignature },
-  { name: 'Civil Law', icon: Scale },
-];
+import { useLanguage } from '@/lib/language-context';
 
 const LegalCategories = () => {
+  const { t } = useLanguage();
   const { data: lawyers } = useListLawyers();
   const [showAll, setShowAll] = useState(false);
 
+  const PRACTICE_AREAS: { name: string; icon: LucideIcon; key: string }[] = [
+    { name: t('lc.familyLaw'), icon: Users, key: 'lc.familyLaw' },
+    { name: t('lc.propertyLaw'), icon: Building, key: 'lc.propertyLaw' },
+    { name: t('lc.criminalLaw'), icon: Gavel, key: 'lc.criminalLaw' },
+    { name: t('lc.cyberLaw'), icon: Laptop, key: 'lc.cyberLaw' },
+    { name: t('lc.consumerLaw'), icon: ShoppingCart, key: 'lc.consumerLaw' },
+    { name: t('lc.corporateLaw'), icon: Briefcase, key: 'lc.corporateLaw' },
+    { name: t('lc.immigrationLaw'), icon: Plane, key: 'lc.immigrationLaw' },
+    { name: t('lc.bankingLaw'), icon: Landmark, key: 'lc.bankingLaw' },
+    { name: t('lc.taxLaw'), icon: FileText, key: 'lc.taxLaw' },
+    { name: t('lc.intellectualProperty'), icon: Shield, key: 'lc.intellectualProperty' },
+    { name: t('lc.labourLaw'), icon: FileSignature, key: 'lc.labourLaw' },
+    { name: t('lc.civilLaw'), icon: Scale, key: 'lc.civilLaw' },
+  ];
+
   const counts = React.useMemo(() => {
     const map = new Map<string, number>();
+    const enNames: Record<string, string> = {
+      'lc.familyLaw': 'Family Law',
+      'lc.propertyLaw': 'Property Law',
+      'lc.criminalLaw': 'Criminal Law',
+      'lc.cyberLaw': 'Cyber Law',
+      'lc.consumerLaw': 'Consumer Law',
+      'lc.corporateLaw': 'Corporate Law',
+      'lc.immigrationLaw': 'Immigration Law',
+      'lc.bankingLaw': 'Banking Law',
+      'lc.taxLaw': 'Tax Law',
+      'lc.intellectualProperty': 'Intellectual Property',
+      'lc.labourLaw': 'Labour Law',
+      'lc.civilLaw': 'Civil Law',
+    };
     for (const lawyer of lawyers ?? []) {
-      map.set(
-        lawyer.primarySpecialization,
-        (map.get(lawyer.primarySpecialization) ?? 0) + 1
-      );
+      const enName = enNames[lawyer.primarySpecialization] ?? lawyer.primarySpecialization;
+      for (const cat of PRACTICE_AREAS) {
+        if (enNames[cat.key] === enName || cat.name === lawyer.primarySpecialization) {
+          map.set(cat.key, (map.get(cat.key) ?? 0) + 1);
+        }
+      }
     }
     return map;
-  }, [lawyers]);
+  }, [lawyers, t]);
 
   const visibleCategories = showAll ? PRACTICE_AREAS : PRACTICE_AREAS.slice(0, 4);
 
@@ -53,7 +71,7 @@ const LegalCategories = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              Browse by <span className="text-[#D4AF37]">Practice Area</span>
+              {t('lc.title')} <span className="text-[#D4AF37]">{t('lc.titleHighlight')}</span>
             </motion.h2>
             <motion.p 
               className="font-sans text-gray-400"
@@ -62,7 +80,7 @@ const LegalCategories = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              Find specialized advocates equipped to handle the specific nuances of your legal matter.
+              {t('lc.subtitle')}
             </motion.p>
           </div>
         </div>
@@ -71,10 +89,10 @@ const LegalCategories = () => {
           <AnimatePresence mode="popLayout">
           {visibleCategories.map((cat, idx) => {
             const Icon = cat.icon;
-            const count = counts.get(cat.name) ?? 0;
+            const count = counts.get(cat.key) ?? 0;
             return (
               <motion.div 
-                key={cat.name} 
+                key={cat.key} 
                 initial={{ opacity: 0, scale: 0.9, y: 20 }}
                 whileInView={{ opacity: 1, scale: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -93,7 +111,7 @@ const LegalCategories = () => {
                     </h3>
                     {count > 0 && (
                       <p className="font-sans text-xs text-gray-400">
-                        {count.toLocaleString()} Lawyer{count === 1 ? '' : 's'}
+                        {count.toLocaleString()} {count === 1 ? t('lc.lawyer') : t('lc.lawyers')}
                       </p>
                     )}
                   </div>
@@ -109,7 +127,7 @@ const LegalCategories = () => {
             onClick={() => setShowAll(s => !s)}
             className="font-sans text-sm font-semibold text-[#D4AF37] hover:text-white border border-[#D4AF37] hover:bg-[#D4AF37] px-8 py-3 rounded-full transition-all duration-300"
           >
-            {showAll ? 'Show Less' : 'Show More'}
+            {showAll ? t('lc.showLess') : t('lc.showMore')}
           </button>
         </div>
       </div>

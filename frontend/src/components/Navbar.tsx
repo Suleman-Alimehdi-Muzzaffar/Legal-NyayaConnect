@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Scale, Menu, X } from 'lucide-react';
+import { Scale, Menu, X, Globe } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/lib/auth-context';
+import { useLanguage } from '@/lib/language-context';
 
 const Navbar = () => {
   const { isAuthenticated, isLawyer, signOut } = useAuth();
+  const { lang, setLanguage, t } = useLanguage();
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -18,14 +20,16 @@ const Navbar = () => {
   }, []);
 
   const navLinks = [
-    { name: 'Home', path: '/' },
-    { name: 'About', path: '/about' },
-    { name: 'Services', path: '/services' },
-    { name: 'Legal Resources', path: '/legal-resources' },
-    { name: 'Testimonials', path: '/testimonials' },
-    { name: 'FAQ', path: '/faq' },
-    { name: 'Contact', path: '/contact' },
+    { name: t('nav.home'), path: '/' },
+    { name: t('nav.about'), path: '/about' },
+    { name: t('nav.services'), path: '/services' },
+    { name: t('nav.legalResources'), path: '/legal-resources' },
+    { name: t('nav.testimonials'), path: '/testimonials' },
+    { name: t('nav.faq'), path: '/faq' },
+    { name: t('nav.contact'), path: '/contact' },
   ];
+
+  const toggleLang = () => setLanguage(lang === 'en' ? 'hi' : 'en');
 
   return (
     <header
@@ -48,7 +52,7 @@ const Navbar = () => {
           <nav className="hidden lg:flex items-center">
             <ul className="flex items-center gap-6">
               {navLinks.map((link) => (
-                <li key={link.name}>
+                <li key={link.path}>
                   <Link
                     to={link.path}
                     className="font-sans text-sm font-medium text-gray-200 hover:text-[#D4AF37] transition-colors relative group"
@@ -62,23 +66,33 @@ const Navbar = () => {
           </nav>
         </div>
 
-        <div className="hidden lg:flex items-center gap-4">
+        <div className="hidden lg:flex items-center gap-3">
+          {/* Language Toggle */}
+          <button
+            onClick={toggleLang}
+            className="flex items-center gap-1.5 font-sans text-sm font-medium text-gray-300 hover:text-[#D4AF37] transition-colors px-3 py-2 rounded-full border border-white/10 hover:border-[#D4AF37]/30"
+            title={lang === 'en' ? 'हिंदी में बदलें' : 'Switch to English'}
+          >
+            <Globe className="w-4 h-4" />
+            {lang === 'en' ? 'हिंदी' : 'English'}
+          </button>
+
           {isAuthenticated ? (
             <>
               <Link to={isLawyer ? "/lawyer/dashboard" : "/dashboard"} className="font-sans text-sm font-medium text-white hover:text-[#D4AF37] transition-colors px-4 py-2">
-                Dashboard
+                {t('nav.dashboard')}
               </Link>
               <button onClick={signOut} className="bg-[#D4AF37] hover:bg-[#c4a133] text-[#102542] font-sans text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transform hover:-translate-y-0.5">
-                Logout
+                {t('nav.logout')}
               </button>
             </>
           ) : (
             <>
               <Link to="/login" className="font-sans text-sm font-medium text-white hover:text-[#D4AF37] transition-colors px-4 py-2">
-                Login
+                {t('nav.login')}
               </Link>
               <Link to="/register" className="bg-[#D4AF37] hover:bg-[#c4a133] text-[#102542] font-sans text-sm font-semibold px-6 py-2.5 rounded-full transition-all duration-300 hover:shadow-[0_0_15px_rgba(212,175,55,0.4)] transform hover:-translate-y-0.5">
-                Register
+                {t('nav.register')}
               </Link>
             </>
           )}
@@ -105,7 +119,7 @@ const Navbar = () => {
             <div className="container mx-auto px-6 py-4 flex flex-col gap-4">
               {navLinks.map((link) => (
                 <Link
-                  key={link.name}
+                  key={link.path}
                   to={link.path}
                   className="font-sans text-base font-medium text-gray-200 hover:text-[#D4AF37] transition-colors py-2"
                   onClick={() => setMobileMenuOpen(false)}
@@ -114,22 +128,31 @@ const Navbar = () => {
                 </Link>
               ))}
               <div className="flex flex-col gap-3 mt-4 pt-4 border-t border-[#D4AF37]/10">
+                {/* Mobile Language Toggle */}
+                <button
+                  onClick={toggleLang}
+                  className="flex items-center gap-2 font-sans text-base font-medium text-gray-300 hover:text-[#D4AF37] transition-colors py-2"
+                >
+                  <Globe className="w-5 h-5" />
+                  {lang === 'en' ? 'हिंदी में बदलें' : 'English में बदलें'}
+                </button>
+
                 {isAuthenticated ? (
                   <>
                     <Link to={isLawyer ? "/lawyer/dashboard" : "/dashboard"} className="font-sans text-base font-medium text-white hover:text-[#D4AF37] transition-colors py-2 text-left block" onClick={() => setMobileMenuOpen(false)}>
-                      Dashboard
+                      {t('nav.dashboard')}
                     </Link>
                     <button onClick={() => { signOut(); setMobileMenuOpen(false); }} className="bg-[#D4AF37] text-[#102542] font-sans text-base font-semibold px-6 py-3 rounded-xl transition-colors text-center block w-full">
-                      Logout
+                      {t('nav.logout')}
                     </button>
                   </>
                 ) : (
                   <>
                     <Link to="/login" className="font-sans text-base font-medium text-white hover:text-[#D4AF37] transition-colors py-2 text-left block" onClick={() => setMobileMenuOpen(false)}>
-                      Login
+                      {t('nav.login')}
                     </Link>
                     <Link to="/register" className="bg-[#D4AF37] text-[#102542] font-sans text-base font-semibold px-6 py-3 rounded-xl transition-colors text-center block" onClick={() => setMobileMenuOpen(false)}>
-                      Register
+                      {t('nav.register')}
                     </Link>
                   </>
                 )}

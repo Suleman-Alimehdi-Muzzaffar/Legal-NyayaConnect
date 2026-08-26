@@ -1,41 +1,44 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Shield, Zap, IndianRupee, BookOpen, Lock, Clock } from 'lucide-react';
-
-const reasons = [
-  {
-    icon: Shield,
-    title: 'Verified Lawyers',
-    description: 'Every advocate undergoes rigorous background and bar council verification.'
-  },
-  {
-    icon: Zap,
-    title: 'Instant Consultation',
-    description: 'Book a consultation with top lawyers instantly, anytime.'
-  },
-  {
-    icon: IndianRupee,
-    title: 'Transparent Pricing',
-    description: 'Upfront fee structures with no hidden charges or surprise billing.'
-  },
-  {
-    icon: BookOpen,
-    title: 'All Practice Areas',
-    description: 'From property disputes to corporate compliance, find specialized expertise.'
-  },
-  {
-    icon: Lock,
-    title: 'Strict Confidentiality',
-    description: 'Bank-grade encryption ensures your case details remain entirely private.'
-  },
-  {
-    icon: Clock,
-    title: '24/7 Support',
-    description: 'Our legal concierge team is available round the clock to assist you.'
-  }
-];
+import { useLanguage } from '@/lib/language-context';
 
 const WhyChooseUs = () => {
+  const { t } = useLanguage();
+
+  const reasons = [
+    {
+      icon: Shield,
+      title: t('wcu.verifiedLawyers'),
+      description: t('wcu.verifiedLawyersDesc')
+    },
+    {
+      icon: Zap,
+      title: t('wcu.instantConsult'),
+      description: t('wcu.instantConsultDesc')
+    },
+    {
+      icon: IndianRupee,
+      title: t('wcu.transparentPricing'),
+      description: t('wcu.transparentPricingDesc')
+    },
+    {
+      icon: BookOpen,
+      title: t('wcu.allAreas'),
+      description: t('wcu.allAreasDesc')
+    },
+    {
+      icon: Lock,
+      title: t('wcu.confidentiality'),
+      description: t('wcu.confidentialityDesc')
+    },
+    {
+      icon: Clock,
+      title: t('wcu.support247'),
+      description: t('wcu.support247Desc')
+    }
+  ];
+
   return (
     <section className="py-24 bg-[#0a1a2e] relative">
       <div className="container mx-auto px-6 md:px-12">
@@ -47,7 +50,7 @@ const WhyChooseUs = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
-            Why Choose <span className="text-[#D4AF37]">NyayaConnect?</span>
+            {t('wcu.title')} <span className="text-[#D4AF37]">{t('wcu.titleHighlight')}</span>
           </motion.h2>
           <motion.p 
             className="font-sans text-gray-400 max-w-2xl mx-auto text-lg"
@@ -56,7 +59,7 @@ const WhyChooseUs = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
-            We elevate the standard of legal services by combining rigorous professional vetting with seamless technology.
+            {t('wcu.subtitle')}
           </motion.p>
         </div>
 
@@ -72,7 +75,6 @@ const WhyChooseUs = () => {
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: index * 0.1 }}
               >
-                {/* Subtle gradient glow inside card on hover */}
                 <div className="absolute inset-0 bg-gradient-to-br from-[#D4AF37]/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-2xl" />
                 
                 <div className="relative z-10">

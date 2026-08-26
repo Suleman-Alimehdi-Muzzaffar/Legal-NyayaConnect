@@ -52,7 +52,7 @@ Source of truth (`/api`, every op needs `operationId`). Never change `info.title
 
 ## Env & pitfalls
 
-- Copy `backend/.env.example→backend/.env` (`MONGODB_URI` only required) and `frontend/.env.example→frontend/.env`. Ports api 8080/web 5173/mockups 8081; web proxies `/api→http://localhost:8080` (`API_PROXY_TARGET`). Replit `PORT`/`BASE_PATH`/`REPL_ID` + Vite plugins behind `REPL_ID`.
+- Copy `frontend/.env.example→frontend/.env`. Backend needs `MONGODB_URI` in `backend/.env` (no `.env.example` committed). Ports api 8080/web 5173/mockups 8081; web proxies `/api→http://localhost:8080` (`API_PROXY_TARGET`). Replit `PORT`/`BASE_PATH`/`REPL_ID` + Vite plugins behind `REPL_ID`.
 - `postcss.config.mjs` empty — keep (guards Tailwind v4 vs ancestor v3). `.npmrc: legacy-peer-deps=true`; `overrides: esbuild 0.27.3`. Workspace deps `"*"`. `react`/`react-dom` pinned 19.1.0 — don't bump; apps keep deps in `devDependencies` except 5 runtime (`@sentry/react`, `focus-trap-react`, `react-helmet-async`, `react-router-dom`, `socket.io-client`).
 - On Windows workspace links are absolute junctions — moving repo breaks `@workspace/*` → `npm install` at root.
 - `git` not installed here (every `git` fails) though `.git` on `main`. Stray root file `20` is redirect artifact — ignore.

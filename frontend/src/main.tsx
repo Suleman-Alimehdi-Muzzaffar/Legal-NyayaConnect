@@ -11,6 +11,7 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 
 import App from './App';
 import { AuthProvider } from './lib/auth-context';
+import { LanguageProvider } from './lib/language-context';
 import { getSavedTheme, getSavedFontScale, applyAppearance, applyTheme, watchSystemTheme } from './lib/appearance';
 
 import './index.css';
@@ -49,7 +50,9 @@ createRoot(document.getElementById('root')!).render(
     <ErrorBoundary>
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <App />
+          <LanguageProvider>
+            <App />
+          </LanguageProvider>
         </AuthProvider>
         <Toaster theme="dark" richColors position="top-right" />
       </QueryClientProvider>

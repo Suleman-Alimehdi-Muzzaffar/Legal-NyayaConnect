@@ -4,8 +4,11 @@ import { motion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import { servicesData } from '../data/servicesData';
 import ServiceIcon from './ServiceIcon';
+import { useLanguage } from '@/lib/language-context';
 
 const ServicesPreview = () => {
+  const { t } = useLanguage();
+
   return (
     <section className="py-24 bg-[#102542]">
       <div className="container mx-auto px-6 md:px-12">
@@ -17,7 +20,7 @@ const ServicesPreview = () => {
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
             >
-              Legal <span className="text-[#D4AF37]">Services</span>
+              {t('services.title')} <span className="text-[#D4AF37]">{t('services.titleHighlight')}</span>
             </motion.h2>
             <motion.p
               className="font-sans text-gray-400"
@@ -26,7 +29,7 @@ const ServicesPreview = () => {
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
             >
-              From family disputes to corporate compliance — dedicated support across the matters that matter.
+              {t('services.subtitle')}
             </motion.p>
           </div>
           <motion.div
@@ -38,7 +41,7 @@ const ServicesPreview = () => {
               to="/services"
               className="font-sans text-sm font-semibold text-[#D4AF37] hover:text-white border border-[#D4AF37] hover:bg-[#D4AF37] px-6 py-2.5 rounded-full transition-all duration-300 w-fit inline-flex items-center gap-2"
             >
-              View All Services <ArrowRight className="w-4 h-4" />
+              {t('services.viewAll')} <ArrowRight className="w-4 h-4" />
             </Link>
           </motion.div>
         </div>

@@ -8,10 +8,10 @@ import { toast } from 'sonner';
 type ChatMsg = { id: string; role: 'user' | 'assistant'; text: string };
 
 const SUGGESTIONS = [
-  'Bail kaise milta hai?',
-  'How to file divorce?',
-  'Consumer complaint kaise kare?',
-  'What is BNS 103?',
+  'जमानत कैसे मिलता है?',
+  'तलाक कैसे दायर करें?',
+  'उपभोक्ता शिकायत कैसे करें?',
+  'BNS 103 क्या है?',
 ];
 
 export default function SupportChat() {
@@ -27,7 +27,7 @@ export default function SupportChat() {
     {
       id: 'welcome',
       role: 'assistant',
-      text: 'Namaste! 🙏 I am NyayaConnect Support — ask me anything about Indian laws (BNS, BNSS, Constitution, etc.) in English or Hindi, even broken English/Hindi. Tap mic to speak. How can I help you today?\n\n— This is general information, not legal advice.',
+      text: 'नमस्ते! 🙏 मैं NyayaConnect Support हूँ — भारतीय कानूनों (BNS, BNSS, संविधान आदि) के बारे में अंग्रेज़ी या हिंदी में कुछ भी पूछें। बोलने के लिए माइक दबाएँ। आज मैं आपकी कैसे मदद कर सकता हूँ?\n\n— यह सामान्य जानकारी है, कानूनी सलाह नहीं।',
     },
   ]);
   const listRef = useRef<HTMLDivElement>(null);

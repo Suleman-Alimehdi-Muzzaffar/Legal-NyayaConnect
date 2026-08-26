@@ -5,8 +5,10 @@ import { Star, MapPin, Award, Shield, Loader2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useListLawyers } from '@workspace/api-client-react';
 import { avatarUrl } from '../lib/avatar';
+import { useLanguage } from '@/lib/language-context';
 
 const FeaturedLawyers = () => {
+  const { t } = useLanguage();
   const { data: lawyers, isLoading } = useListLawyers();
 
   return (
@@ -20,7 +22,7 @@ const FeaturedLawyers = () => {
             className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 mb-6"
           >
             <Award className="w-4 h-4 text-[#D4AF37]" />
-            <span className="text-[#D4AF37] font-sans text-xs font-semibold uppercase tracking-wider">Top Rated Advocates</span>
+            <span className="text-[#D4AF37] font-sans text-xs font-semibold uppercase tracking-wider">{t('fl.badge')}</span>
           </motion.div>
           
           <motion.h2 
@@ -30,7 +32,7 @@ const FeaturedLawyers = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
           >
-            Featured <span className="text-[#D4AF37]">Legal Minds</span>
+            {t('fl.title')} <span className="text-[#D4AF37]">{t('fl.titleHighlight')}</span>
           </motion.h2>
           <motion.p 
             className="font-sans text-gray-400 max-w-2xl mx-auto text-lg"
@@ -39,14 +41,14 @@ const FeaturedLawyers = () => {
             viewport={{ once: true }}
             transition={{ delay: 0.2 }}
           >
-            Consult with India's most highly recommended lawyers. Vetted for excellence, verified for results.
+            {t('fl.subtitle')}
           </motion.p>
         </div>
 
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-20 text-gray-400">
             <Loader2 className="w-10 h-10 text-[#D4AF37] animate-spin mb-4" />
-            <p className="font-sans">Loading top lawyers...</p>
+            <p className="font-sans">{t('fl.loading')}</p>
           </div>
         ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -59,7 +61,6 @@ const FeaturedLawyers = () => {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: index * 0.1 }}
             >
-              {/* Subtle gold line at top */}
               <div className="absolute top-0 left-0 right-0 h-1 bg-[#D4AF37] transform origin-left scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
               
               <div className="flex flex-col items-center text-center mb-6 pt-2">
@@ -94,11 +95,11 @@ const FeaturedLawyers = () => {
 
               <div className="grid grid-cols-2 gap-px bg-white/10 mb-6">
                 <div className="bg-[#102542]/80 p-3 text-center">
-                  <div className="text-xs text-gray-400 font-sans mb-1">Experience</div>
+                  <div className="text-xs text-gray-400 font-sans mb-1">{t('fl.experience')}</div>
                   <div className="font-serif font-bold text-white">{lawyer.experience} Yrs</div>
                 </div>
                 <div className="bg-[#102542]/80 p-3 text-center">
-                  <div className="text-xs text-gray-400 font-sans mb-1">Rating</div>
+                  <div className="text-xs text-gray-400 font-sans mb-1">{t('fl.rating')}</div>
                   <div className="flex items-center justify-center gap-1 font-serif font-bold text-white">
                     {lawyer.rating} <Star className="w-3 h-3 text-[#D4AF37]" fill="#D4AF37" />
                   </div>
@@ -107,7 +108,7 @@ const FeaturedLawyers = () => {
 
               <div className="mt-auto">
                 <Link to="/register/client" className="block w-full bg-white/5 hover:bg-[#D4AF37] text-white hover:text-[#102542] border border-[#D4AF37]/30 hover:border-[#D4AF37] text-center font-sans font-semibold py-3 rounded-xl transition-all duration-300">
-                  Consult Now
+                  {t('fl.consultNow')}
                 </Link>
               </div>
             </motion.div>
