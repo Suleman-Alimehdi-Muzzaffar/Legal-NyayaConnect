@@ -23,7 +23,8 @@ import {
   Sun,
   Moon,
   Monitor,
-  Type
+  Type,
+  Building
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getSavedTheme, getSavedFontScale, applyTheme, applyFontScale, type Theme } from '@/lib/appearance';
@@ -116,6 +117,8 @@ const LawyerSettings = () => {
   const [downloading, setDownloading] = useState(false);
   const [deletingAccount, setDeletingAccount] = useState(false);
   const [changingPassword, setChangingPassword] = useState(false);
+  const [consultMode, setConsultMode] = useState<'online' | 'offline' | 'both'>('both');
+  const [savingConsultMode, setSavingConsultMode] = useState(false);
 
   const { data: myExports, refetch: refetchExports } = useGetMyDataExports({
     request: { headers: token ? { authorization: `Bearer ${token}` } : undefined },
@@ -134,6 +137,40 @@ const LawyerSettings = () => {
   useEffect(() => {
     applyFontScale(fontScale, user?.id);
   }, [fontScale, user?.id]);
+
+  useEffect(() => {
+    if (!token) return;
+    let cancelled = false;
+    const loadMode = async () => {
+      try {
+        const res = await fetch(`/api/lawyer/consultation-mode`, { headers: { Authorization: `Bearer ${token}` } });
+        if (!res.ok) return;
+        const data = await res.json() as { mode?: string };
+        if (cancelled) return;
+        if (data.mode === 'online' || data.mode === 'offline' || data.mode === 'both') setConsultMode(data.mode);
+      } catch {}
+    };
+    loadMode();
+    return () => { cancelled = true; };
+  }, [token]);
+
+  const handleSaveConsultMode = async () => {
+    setSavingConsultMode(true);
+    try {
+      const res = await fetch(`/api/lawyer/consultation-mode`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+        body: JSON.stringify({ mode: consultMode }),
+      });
+      if (res.status === 401) { toast.error('Session expired. Please sign in again.'); return; }
+      if (!res.ok) { toast.error('Failed to update consultation mode.'); return; }
+      toast.success(consultMode === 'both' ? 'Consultation mode: Online + Offline' : consultMode === 'online' ? 'Consultation mode: Online only' : 'Consultation mode: Offline only');
+    } catch {
+      toast.error('Failed to update. Check connection.');
+    } finally {
+      setSavingConsultMode(false);
+    }
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -158,6 +195,7 @@ const LawyerSettings = () => {
 
   const sections = [
     { id: 'availability', label: 'Availability', icon: CalendarIcon },
+    { id: 'consultationMode', label: 'Consultation Mode', icon: Video },
     { id: 'integrations', label: 'Google Calendar', icon: Video },
     { id: 'pricing', label: 'Pricing & Policies', icon: IndianRupee },
     { id: 'security', label: 'Account Security', icon: ShieldCheck },
@@ -491,6 +529,34 @@ const LawyerSettings = () => {
               </div>
               <button onClick={handleSaveAvailability} className="bg-[#D4AF37] hover:bg-[#c4a133] text-[#102542] font-bold px-6 py-3 rounded-xl transition-all mt-6 shadow-[0_4px_15px_rgba(212,175,55,0.3)]">
                 Save Availability
+              </button>
+            </div>
+          </motion.div>
+        );
+
+      case 'consultationMode':
+        return (
+          <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-8">
+            <div>
+              <h3 className="text-xl font-serif font-bold mb-2">Consultation Mode</h3>
+              <p className="text-sm text-gray-400 mb-6 max-w-xl">Choose how clients can book you. <span className="text-white">Both</span> shows Online + Offline — recommended. Changing here updates your public profile and the booking guard (clients get a clear error if they pick a disabled mode).</p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl">
+                {[
+                  { id: 'both', label: 'Online + Offline', desc: 'Recommended', icon: Video },
+                  { id: 'online', label: 'Online only', desc: 'Google Meet only', icon: Video },
+                  { id: 'offline', label: 'Offline only', desc: 'Office visits only', icon: Building },
+                ].map(opt => (
+                  <label key={opt.id} className="cursor-pointer relative">
+                    <input type="radio" name="consultMode" className="peer sr-only" checked={consultMode === opt.id} onChange={() => setConsultMode(opt.id as typeof consultMode)} />
+                    <div className="h-full p-4 rounded-xl border bg-white/5 transition-all peer-checked:border-[#D4AF37] peer-checked:bg-[#D4AF37]/10 border-white/10">
+                      <div className="font-semibold text-white text-sm flex items-center gap-2"><opt.icon className="w-4 h-4 text-[#D4AF37]" />{opt.label}</div>
+                      <div className="text-xs text-gray-400 mt-1">{opt.desc}</div>
+                    </div>
+                  </label>
+                ))}
+              </div>
+              <button onClick={handleSaveConsultMode} disabled={savingConsultMode} className="bg-[#D4AF37] hover:bg-[#c4a133] text-[#102542] font-bold px-6 py-3 rounded-xl transition-all mt-6 shadow-[0_4px_15px_rgba(212,175,55,0.3)] disabled:opacity-60 inline-flex items-center gap-2">
+                {savingConsultMode && <Loader2 className="w-4 h-4 animate-spin" />} Save Consultation Mode
               </button>
             </div>
           </motion.div>

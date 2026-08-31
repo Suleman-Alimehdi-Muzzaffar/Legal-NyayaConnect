@@ -102,7 +102,20 @@ export async function getServiceBySlug(slug: string): Promise<Service | undefine
 // ----- Lawyers -----
 
 export async function getLawyers(): Promise<Lawyer[]> {
-  return doc(await db.Lawyer.find().lean());
+  const lawyers = doc(await db.Lawyer.find().lean()) as Lawyer[];
+  // Normalize legacy "online" → "both" so offline mode is always available to clients
+  for (const l of lawyers as unknown as Array<{ availability?: string }>) {
+    if (l.availability === "online") l.availability = "both";
+  }
+  return lawyers;
+}
+
+export async function backfillLawyerAvailability(): Promise<number> {
+  const res = await db.Lawyer.updateMany(
+    { availability: "online" } as unknown as Record<string, unknown>,
+    { $set: { availability: "both" } } as unknown as Record<string, unknown>,
+  );
+  return (res as unknown as { modifiedCount: number }).modifiedCount ?? 0;
 }
 
 function slugifyName(name: string): string {
@@ -162,8 +175,13 @@ export async function regenerateLawyerAvailableSlots(
 }
 
 export async function ensurePublicLawyerEntry(user: StoredUser): Promise<void> {
-  const existing = await db.Lawyer.findOne({ id: user.id }).lean();
-  if (existing) return;
+  const existing = await db.Lawyer.findOne({ id: user.id }).lean() as unknown as { availability?: string } | null;
+  if (existing) {
+    if (existing.availability === "online") {
+      await db.Lawyer.updateOne({ id: user.id }, { $set: { availability: "both" } });
+    }
+    return;
+  }
   const name = user.name.trim();
   const baseSlug = slugifyName(name);
   let slug = baseSlug;
@@ -196,7 +214,7 @@ export async function ensurePublicLawyerEntry(user: StoredUser): Promise<void> {
     state: user.state ?? "",
     languages: [],
     consultationFee: 0,
-    availability: "online",
+    availability: "both",
     isVerified: false,
     isPremium: false,
     casesWon: 0,
@@ -216,7 +234,11 @@ export async function ensurePublicLawyerEntry(user: StoredUser): Promise<void> {
 
 export async function getLawyerBySlug(slug: string): Promise<Lawyer | undefined> {
   const found = await db.Lawyer.findOne({ slug }).lean();
-  return doc(found) ?? undefined;
+  const lawyer = doc(found) as Lawyer | undefined;
+  if (lawyer && (lawyer as unknown as { availability?: string }).availability === "online") {
+    (lawyer as unknown as { availability: string }).availability = "both";
+  }
+  return lawyer ?? undefined;
 }
 
 export async function getLawyerReviews(): Promise<Lawyer["reviewsList"]> {

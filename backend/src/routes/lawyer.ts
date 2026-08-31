@@ -141,6 +141,45 @@ router.patch("/lawyer/visibility", async (req, res): Promise<void> => {
   res.json({ visibility });
 });
 
+router.get("/lawyer/consultation-mode", async (req, res): Promise<void> => {
+  const lawyerId = await bearerLawyerId(req);
+  if (!lawyerId) {
+    res.status(401).json({ error: "unauthorized", message: "Missing or invalid session token." });
+    return;
+  }
+  const lawyer = await db.Lawyer.findOne({ id: lawyerId }).lean() as Record<string, unknown> | null;
+  if (!lawyer) {
+    res.status(404).json({ error: "not_found", message: "Lawyer profile not found" });
+    return;
+  }
+  const mode = typeof lawyer.availability === "string" && ["online", "offline", "both"].includes(lawyer.availability as string) ? lawyer.availability : "both";
+  res.json({ mode });
+});
+
+router.patch("/lawyer/consultation-mode", async (req, res): Promise<void> => {
+  const lawyerId = await bearerLawyerId(req);
+  if (!lawyerId) {
+    res.status(401).json({ error: "unauthorized", message: "Missing or invalid session token." });
+    return;
+  }
+  const { mode } = req.body as Record<string, unknown>;
+  if (mode !== "online" && mode !== "offline" && mode !== "both") {
+    res.status(400).json({ error: "validation_error", message: "Mode must be online, offline, or both." });
+    return;
+  }
+  const updated = await db.Lawyer.findOneAndUpdate(
+    { id: lawyerId },
+    { $set: { availability: mode } },
+    { new: true },
+  ).lean() as Record<string, unknown> | null;
+  if (!updated) {
+    res.status(404).json({ error: "not_found", message: "Lawyer profile not found" });
+    return;
+  }
+  req.log.info({ lawyerId, mode }, "lawyer consultation mode updated");
+  res.json({ mode });
+});
+
 router.get("/lawyer/dashboard", async (_req, res): Promise<void> => {
   const data = GetLawyerDashboardResponse.parse(await getLawyerProfile());
   res.json(data);

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Scale, Mail, AlertCircle, Loader2 } from 'lucide-react';
 import FormInput from '@/components/forms/FormInput';
@@ -11,6 +11,7 @@ import { ApiError } from '@workspace/api-client-react';
 const Login = () => {
   const { signIn } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation() as { state?: { from?: string } };
   const [loginType, setLoginType] = useState<'client' | 'lawyer'>('client');
   const [formData, setFormData] = useState({
     email: '',
@@ -36,6 +37,21 @@ const Login = () => {
     setLoading(true);
     try {
       const user = await signIn(formData.email, formData.password);
+      // If client was mid-booking, return them to the lawyer page with slot preserved
+      const pending = (() => {
+        try { return sessionStorage.getItem('nyayaconnect.pendingBooking'); } catch { return null; }
+      })();
+      const from = location.state?.from;
+      if (from) {
+        navigate(from, { replace: true });
+        return;
+      }
+      if (pending && user.role !== 'lawyer') {
+        try {
+          const p = JSON.parse(pending) as { slug?: string };
+          if (p.slug) { navigate(`/lawyers/${p.slug}#book`, { replace: true }); return; }
+        } catch {}
+      }
       navigate(user.role === 'lawyer' ? '/lawyer-dashboard' : '/dashboard', { replace: true });
     } catch (err) {
       setError(err instanceof ApiError && typeof err.data?.message === 'string' ? err.data.message : 'Unable to sign in. Please try again.');

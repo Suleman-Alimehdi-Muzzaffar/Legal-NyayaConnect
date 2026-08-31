@@ -1,6 +1,6 @@
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import type { ReactNode } from 'react';
-import { useLogin, useRegister } from '@workspace/api-client-react';
+import { setAuthTokenGetter, useLogin, useRegister } from '@workspace/api-client-react';
 import type { RegisterInput, User } from '@workspace/api-client-react';
 import { applyAppearance, getSavedTheme, getSavedFontScale, resetAppearance } from '@/lib/appearance';
 
@@ -64,6 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(() => loadSession());
   const loginMutation = useLogin();
   const registerMutation = useRegister();
+
+  // Keep generated Orval client in sync — without this, useCreateAppointment()
+  // and other hooks send no Authorization header and every booking returns 401
+  // ("Please sign in") even when the user is signed in.
+  useEffect(() => {
+    setAuthTokenGetter(() => session?.token ?? null);
+    return () => setAuthTokenGetter(null);
+  }, [session?.token]);
 
   const signIn = useCallback(
     async (email: string, password: string) => {

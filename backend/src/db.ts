@@ -15,4 +15,12 @@ export async function initDb(): Promise<void> {
 
   await connectDb(uri);
   logger.info("Connected to MongoDB Atlas");
+  // Backfill legacy lawyers: "online" → "both" so offline consultation is always bookable
+  try {
+    const { backfillLawyerAvailability } = await import("./data/store");
+    const n = await backfillLawyerAvailability();
+    if (n > 0) logger.info({ migrated: n }, "Migrated lawyer availability online → both");
+  } catch (err) {
+    logger.warn({ err }, "Failed to backfill lawyer availability");
+  }
 }

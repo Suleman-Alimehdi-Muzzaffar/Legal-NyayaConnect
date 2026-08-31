@@ -32,6 +32,7 @@ const Analytics = () => {
   });
 
   const [period, setPeriod] = useState<'30d' | '3m' | '6m' | '12m'>('30d');
+  const [modeFilter, setModeFilter] = useState<'both' | 'online' | 'offline'>('both');
 
   const PERIODS = {
     '30d': { months: 1, weeks: 4 },
@@ -52,7 +53,15 @@ const Analytics = () => {
   const periodLabel = PERIOD_LABELS[period];
 
   const filteredRevenue = useMemo(() => revenueData.slice(-monthlySlice), [revenueData, monthlySlice]);
-  const filteredWeekly = useMemo(() => weeklyAppointments.slice(-weeklySlice), [weeklyAppointments, weeklySlice]);
+  const filteredWeeklyRaw = useMemo(() => weeklyAppointments.slice(-weeklySlice), [weeklyAppointments, weeklySlice]);
+  const filteredWeekly = useMemo(() => {
+    if (modeFilter === 'both') return filteredWeeklyRaw;
+    return filteredWeeklyRaw.map(d => ({
+      ...d,
+      online: modeFilter === 'online' ? d.online : 0,
+      offline: modeFilter === 'offline' ? d.offline : 0,
+    }));
+  }, [filteredWeeklyRaw, modeFilter]);
   const filteredRating = useMemo(() => ratingTrend.slice(-monthlySlice), [ratingTrend, monthlySlice]);
 
   const totalRevenue = useMemo(() => filteredRevenue.reduce((sum, d) => sum + d.revenue, 0), [filteredRevenue]);
@@ -91,16 +100,23 @@ const Analytics = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <h2 className="font-serif text-3xl font-bold">Analytics & Insights</h2>
-        <select
-          value={period}
-          onChange={(e) => setPeriod(e.target.value as typeof period)}
-          className="bg-[#102542] border border-white/10 text-white text-sm font-semibold px-4 py-2.5 rounded-xl outline-none focus:border-[#D4AF37]/50 appearance-none max-w-[200px] cursor-pointer"
-        >
-          <option value="30d" className="bg-[#102542] text-white">Last 30 Days</option>
-          <option value="3m" className="bg-[#102542] text-white">Last 3 Months</option>
-          <option value="6m" className="bg-[#102542] text-white">Last 6 Months</option>
-          <option value="12m" className="bg-[#102542] text-white">Last 12 Months</option>
-        </select>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 bg-white/5 border border-white/10 rounded-xl p-1">
+            {(['both','online','offline'] as const).map(m => (
+              <button key={m} onClick={() => setModeFilter(m)} className={cn("px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition-colors", modeFilter===m ? "bg-[#D4AF37] text-[#102542]" : "text-gray-400 hover:text-white")}>{m === 'both' ? 'Both' : m}</button>
+            ))}
+          </div>
+          <select
+            value={period}
+            onChange={(e) => setPeriod(e.target.value as typeof period)}
+            className="bg-[#102542] border border-white/10 text-white text-sm font-semibold px-4 py-2.5 rounded-xl outline-none focus:border-[#D4AF37]/50 appearance-none max-w-[200px] cursor-pointer"
+          >
+            <option value="30d" className="bg-[#102542] text-white">Last 30 Days</option>
+            <option value="3m" className="bg-[#102542] text-white">Last 3 Months</option>
+            <option value="6m" className="bg-[#102542] text-white">Last 6 Months</option>
+            <option value="12m" className="bg-[#102542] text-white">Last 12 Months</option>
+          </select>
+        </div>
       </div>
 
       {/* KPI Row */}
@@ -160,7 +176,7 @@ const Analytics = () => {
         {/* Chart 2: Appointments */}
         <motion.div variants={itemVariants} className="glass-card p-6 rounded-3xl border border-white/10">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="font-serif text-xl font-bold">Weekly Appointments</h3>
+            <h3 className="font-serif text-xl font-bold">Weekly Appointments {modeFilter !== 'both' && <span className="text-xs font-bold text-[#D4AF37] ml-2 capitalize">· {modeFilter} only</span>}</h3>
             <span className="text-sm font-bold text-white">{totalAppointments} Total</span>
           </div>
           <ResponsiveContainer width="100%" height={260}>

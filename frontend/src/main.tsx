@@ -13,6 +13,24 @@ import App from './App';
 import { AuthProvider } from './lib/auth-context';
 import { LanguageProvider } from './lib/language-context';
 import { getSavedTheme, getSavedFontScale, applyAppearance, applyTheme, watchSystemTheme } from './lib/appearance';
+import { setAuthTokenGetter } from '@workspace/api-client-react';
+
+// Fallback getter for queries that mount before AuthProvider hydrates session.
+// AuthProvider's useEffect overwrites this with the live session token.
+setAuthTokenGetter(() => {
+  try {
+    const raw = localStorage.getItem('nyayaconnect.session');
+    if (!raw) return null;
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && 'token' in parsed) {
+      const t = (parsed as { token?: unknown }).token;
+      return typeof t === 'string' && t.length > 0 ? t : null;
+    }
+    return null;
+  } catch {
+    return null;
+  }
+});
 
 import './index.css';
 

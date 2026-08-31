@@ -52,11 +52,11 @@ router.post("/appointments", async (req, res): Promise<void> => {
     res.status(400).json({ error: "validation_error", message: "Invalid appointment payload" });
     return;
   }
-  const { lawyerName, date, time } = result.data as unknown as { lawyerName?: string; date?: string; time?: string };
+  const { lawyerName, date, time, mode: reqMode } = result.data as unknown as { lawyerName?: string; date?: string; time?: string; mode?: string };
   if (lawyerName && date && time) {
     // Validate against lawyer's weekly availability (IST) if lawyer exists
     try {
-      const lawyer = await db.Lawyer.findOne({ name: lawyerName }).lean() as unknown as { name: string; weeklyHours?: Array<{ day: string; active: boolean; start: string; end: string }> } | null;
+      const lawyer = await db.Lawyer.findOne({ name: lawyerName }).lean() as unknown as { name: string; availability?: string; weeklyHours?: Array<{ day: string; active: boolean; start: string; end: string }> } | null;
       if (lawyer) {
         const DEFAULT_WEEKLY = [
           { day: "Monday", active: true, start: "09:00", end: "17:00" },
@@ -99,10 +99,17 @@ router.post("/appointments", async (req, res): Promise<void> => {
             return;
           }
         }
+        // Mode vs lawyer consultation-mode guard
+        const avail = (lawyer as unknown as { availability?: string }).availability;
+        if (avail && avail !== "both" && reqMode && avail !== reqMode) {
+          res.status(400).json({ error: "mode_unavailable", message: `Lawyer only offers ${avail} consultations.` });
+          return;
+        }
       }
     } catch {
       // ignore validation errors — fall through to duplicate check
     }
+    // Physical slot is single — dedup irrespective of mode (online vs offline blocks same time)
     const existing = await db.Appointment.findOne({ lawyerName, date, time, status: { $ne: "cancelled" } }).lean();
     if (existing) {
       res.status(409).json({ error: "slot_taken", message: "This slot is already booked. Please choose another time." });

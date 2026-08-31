@@ -76,9 +76,11 @@ function buildSlotsFromWeeklyHours(weeklyHours: WeeklyHour[]): BookingDay[] {
   return days;
 }
 
+const PENDING_BOOKING_KEY = 'nyayaconnect.pendingBooking';
+
 export default function LawyerProfile() {
   const { slug } = useParams<{ slug: string }>();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, token, signOut } = useAuth();
   const showChrome = !isAuthenticated;
   const { data: lawyer, isLoading } = useGetLawyerBySlug(slug ?? '');
   const [activeTab, setActiveTab] = useState<"overview" | "experience" | "reviews" | "availability">("overview");
@@ -90,7 +92,29 @@ export default function LawyerProfile() {
   const [chatOpen, setChatOpen] = useState(false);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const createAppointmentMutation = useCreateAppointment();
+  // Pass Authorization explicitly — mirrors other dashboards (LawyerDocuments etc.)
+  // and ensures customFetch's setAuthTokenGetter fallback isn't the only path.
+  const createAppointmentMutation = useCreateAppointment({
+    request: token ? { headers: { Authorization: `Bearer ${token}` } } : undefined,
+  } as never);
+
+  // Restore pending booking after login redirect (preserves slot across auth)
+  useEffect(() => {
+    if (!isAuthenticated || !lawyer) return;
+    try {
+      const raw = sessionStorage.getItem(PENDING_BOOKING_KEY);
+      if (!raw) return;
+      const p = JSON.parse(raw) as { slug?: string; date?: string; slot?: string };
+      if (p.slug === lawyer.slug && p.date && p.slot) {
+        setSelectedDate(p.date);
+        setSelectedSlot(p.slot);
+        setActiveTab('availability');
+        setModeStepOpen(true);
+        requestAnimationFrame(() => document.getElementById('book')?.scrollIntoView({ behavior: 'smooth' }));
+      }
+      sessionStorage.removeItem(PENDING_BOOKING_KEY);
+    } catch {}
+  }, [isAuthenticated, lawyer]);
 
   // Bookable days: derive from weeklyHours (authoritative) so date cards always match
   // lawyer's real availability. Falls back to stored availableSlots only for legacy docs
@@ -202,6 +226,14 @@ export default function LawyerProfile() {
   const handleBook = async (mode: "online" | "offline") => {
     if (!selectedDate || !selectedSlot) { toast.error("Please select a date and slot"); return; }
     if (liveSlots && !liveSlots.includes(selectedSlot)) { toast.error("This slot was just booked. Please choose another."); setSelectedSlot(null); setModeStepOpen(false); return; }
+    if (!isAuthenticated || !token) {
+      try {
+        sessionStorage.setItem(PENDING_BOOKING_KEY, JSON.stringify({ slug: lawyer.slug, date: selectedDate, slot: selectedSlot, mode }));
+      } catch {}
+      toast.error("Please sign in to book a consultation.");
+      navigate('/login', { state: { from: `/lawyers/${lawyer.slug}#book` } });
+      return;
+    }
     setBooking(true);
     try {
       await createAppointmentMutation.mutateAsync({
@@ -261,8 +293,16 @@ export default function LawyerProfile() {
             }).catch(() => {});
         }
       } else if (err instanceof ApiError && err.status === 401) {
-        toast.error("Please sign in to book a consultation.");
-        navigate('/login');
+        // Token expired / revoked — clear stale session and preserve booking intent
+        try {
+          sessionStorage.setItem(PENDING_BOOKING_KEY, JSON.stringify({ slug: lawyer.slug, date: selectedDate, slot: selectedSlot }));
+        } catch {}
+        signOut();
+        toast.error("Your session expired. Please sign in again to book.");
+        navigate('/login', { state: { from: `/lawyers/${lawyer.slug}#book` } });
+      } else if (err instanceof ApiError && err.status === 400 && (err.data as { error?: string })?.error === 'mode_unavailable') {
+        toast.error((err.data as { message?: string })?.message ?? "This lawyer doesn't offer that consultation mode.");
+        setModeStepOpen(false);
       } else {
         toast.error(err instanceof Error ? err.message : "Unable to book. Please try again.");
       }
@@ -764,15 +804,32 @@ export default function LawyerProfile() {
                               <span className="text-gray-300">Consultation Fee</span>
                               <span className="text-xl font-bold text-[#D4AF37]">₹{lawyer.consultationFee}</span>
                             </div>
-                            <button 
-                              onClick={() => setModeStepOpen(true)}
-                              disabled={booking}
-                              className="w-full bg-[#D4AF37] text-[#102542] font-bold py-3 rounded-lg hover:bg-[#c4a133] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2"
-                            >
-                              {booking && <Loader2 className="w-4 h-4 animate-spin" />}
-                              Confirm Booking
-                            </button>
-                            <p className="text-[10px] text-gray-500 text-center mt-3">
+                            {isAuthenticated ? (
+                              <button 
+                                onClick={() => setModeStepOpen(true)}
+                                disabled={booking}
+                                className="w-full bg-[#D4AF37] text-[#102542] font-bold py-3 rounded-lg hover:bg-[#c4a133] disabled:opacity-60 transition-colors inline-flex items-center justify-center gap-2"
+                              >
+                                {booking && <Loader2 className="w-4 h-4 animate-spin" />}
+                                Confirm Booking
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  try { sessionStorage.setItem(PENDING_BOOKING_KEY, JSON.stringify({ slug: lawyer.slug, date: selectedDate, slot: selectedSlot })); } catch {}
+                                  toast.error("Please sign in to book a consultation.");
+                                  navigate('/login', { state: { from: `/lawyers/${lawyer.slug}#book` } });
+                                }}
+                                className="w-full bg-white/10 border border-white/20 text-white font-bold py-3 rounded-lg hover:bg-white/15 transition-colors inline-flex items-center justify-center gap-2"
+                                title="Sign in to book"
+                              >
+                                Sign in to Book
+                              </button>
+                            )}
+                            {lawyer.officeAddress && (
+                              <p className="text-[11px] text-gray-400 text-center mt-3 flex items-center justify-center gap-1.5"><Building className="w-3 h-3 text-[#D4AF37]" />{lawyer.officeAddress} • {lawyer.city}</p>
+                            )}
+                            <p className="text-[10px] text-gray-500 text-center mt-2">
                               Cancellation allowed up to 24hrs before scheduled time for full refund.
                             </p>
                           </motion.div>
@@ -786,8 +843,10 @@ export default function LawyerProfile() {
                           >
                             <p className="font-semibold text-white text-center mb-1">Choose consultation mode</p>
                             <p className="text-xs text-gray-400 text-center mb-4">{selectedDate} at {selectedSlot} • ₹{lawyer.consultationFee}</p>
-                            <div className={cn("grid gap-3", lawyer.availability !== "offline" && lawyer.availability !== "online" ? "grid-cols-2" : "grid-cols-1")}>
-                              {lawyer.availability !== "offline" && (
+                            {lawyer.officeAddress && (
+                              <p className="text-[11px] text-gray-400 text-center mb-3 flex items-center justify-center gap-1.5"><Building className="w-3 h-3 text-[#D4AF37]" />{lawyer.officeAddress}{lawyer.city ? `, ${lawyer.city}` : ''}</p>
+                            )}
+                            <div className="grid gap-3 grid-cols-2">
                                 <button
                                   onClick={() => handleBook("online")}
                                   disabled={booking}
@@ -797,8 +856,6 @@ export default function LawyerProfile() {
                                   <span className="font-bold text-sm text-emerald-300">Online Consultation</span>
                                   <span className="text-[10px] text-gray-400 text-center leading-snug">Secure Google Meet — link appears in My Appointments once your lawyer creates it</span>
                                 </button>
-                              )}
-                              {lawyer.availability !== "online" && (
                                 <button
                                   onClick={() => handleBook("offline")}
                                   disabled={booking}
@@ -806,9 +863,8 @@ export default function LawyerProfile() {
                                 >
                                   <MapPin className="w-6 h-6 text-[#D4AF37]" />
                                   <span className="font-bold text-sm text-[#D4AF37]">Office Visit</span>
-                                  <span className="text-[10px] text-gray-400 text-center leading-snug">Visit at advocate's office — Get Directions available in My Appointments</span>
+                                  <span className="text-[10px] text-gray-400 text-center leading-snug">Visit at advocates office{lawyer.officeAddress ? ` — ${lawyer.officeAddress}` : ''} — Get Directions available in My Appointments</span>
                                 </button>
-                              )}
                             </div>
                             <button onClick={() => setModeStepOpen(false)} disabled={booking} className="mt-3 w-full text-xs text-gray-400 hover:text-white transition-colors">
                               ← Change slot
