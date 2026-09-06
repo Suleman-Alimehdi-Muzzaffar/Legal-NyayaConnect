@@ -58,26 +58,43 @@ export function startCron() {
         const clientName = appt.clientName as string | undefined;
         logger.info({ apptId: appt.id, date, time, hours: hours.toFixed(1) }, "cron reminder check");
 
-        // Best effort — send push to both parties if we can resolve userIds
+        // Best effort — send push + email to both parties if we can resolve userIds
         try {
           const { sendPushIfEnabled } = await import("./push");
-          const { findUserByEmail } = await import("../data/store");
-          // Appointment (client perspective) has no client email, so skip
-          // LawyerAppointment may have client email via Client collection
+          const { sendEmailIfEnabled } = await import("./email");
+          const { findUserByEmail, findUserById } = await import("../data/store");
+          const is24h = hours > 23 && hours < 24;
+          const whenLabel = is24h ? "in 24 hours" : "in 1 hour";
+          const subject = `Reminder: Appointment ${whenLabel} — ${date} ${time} IST`;
+          // client side (LawyerAppointment has clientName)
           if (clientName) {
             const clientDoc = await db.Client.findOne({ name: clientName }).lean() as { email?: string } | null;
             if (clientDoc?.email) {
               const user = await findUserByEmail(clientDoc.email);
-              if (user) await sendPushIfEnabled(user.id, "reminder", { title: "Upcoming appointment", body: `${date} ${time} — ${lawyerName ?? clientName}`, url: "/dashboard/appointments" });
+              if (user) {
+                await sendPushIfEnabled(user.id, "reminder", { title: "Upcoming appointment", body: `${date} ${time} — ${lawyerName ?? clientName}`, url: "/dashboard/appointments" });
+                await sendEmailIfEnabled(user.id, user.email, "reminder", subject, `<p>Hi ${user.name},</p><p>This is a reminder — your consultation <strong>${lawyerName ?? "with lawyer"}</strong> is ${whenLabel} on <strong>${date} at ${time} IST</strong>.</p><p><a href="${process.env.FRONTEND_URL ?? "http://localhost:5173"}/dashboard/appointments">View appointment</a></p>`);
+              }
             }
           }
+          // lawyer side — Appointment has lawyerName
           if (lawyerName) {
             const lawyerDoc = await db.Lawyer.findOne({ name: lawyerName }).lean() as { id?: string } | null;
             if (lawyerDoc?.id) {
               await sendPushIfEnabled(lawyerDoc.id, "reminder", { title: "Upcoming appointment", body: `${date} ${time}`, url: "/lawyer/appointments" });
+              const lawyerUser = await findUserById(lawyerDoc.id);
+              if (lawyerUser?.email) {
+                await sendEmailIfEnabled(lawyerDoc.id, lawyerUser.email, "reminder", subject, `<p>Hi ${lawyerUser.name},</p><p>Reminder — consultation with <strong>${clientName ?? "client"}</strong> is ${whenLabel} on <strong>${date} at ${time} IST</strong>.</p><p><a href="${process.env.FRONTEND_URL ?? "http://localhost:5173"}/lawyer/appointments">View appointment</a></p>`);
+              }
             }
           }
-        } catch {}
+          // Also cover plain Appointment where we can resolve lawyer user directly (fallback for client-owned record)
+          if (!clientName && lawyerName) {
+            // try to notify any client booked against this lawyer/date/time via User lookup is not stored, so skip — push already done for lawyer
+          }
+        } catch (err) {
+          logger.warn({ err }, "cron reminder notify failed");
+        }
       }
     } catch (err) {
       logger.error({ err }, "cron appointment reminder failed");

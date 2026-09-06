@@ -54,6 +54,12 @@ router.post("/appointments", async (req, res): Promise<void> => {
   }
   const { lawyerName, date, time, mode: reqMode } = result.data as unknown as { lawyerName?: string; date?: string; time?: string; mode?: string };
   if (lawyerName && date && time) {
+    // Block past dates outright (client portal must only allow today + future)
+    const todayStrCreate = new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+    if (date < todayStrCreate) {
+      res.status(400).json({ error: "validation_error", message: "Date cannot be in the past." });
+      return;
+    }
     // Validate against lawyer's weekly availability (IST) if lawyer exists
     try {
       const lawyer = await db.Lawyer.findOne({ name: lawyerName }).lean() as unknown as { name: string; availability?: string; weeklyHours?: Array<{ day: string; active: boolean; start: string; end: string }> } | null;
@@ -158,23 +164,33 @@ router.post("/appointments", async (req, res): Promise<void> => {
       req.log.error({ err: e }, "failed to mirror client appointment to lawyer calendar");
     }
   })();
-  // notify lawyer about new booking (fire-and-forget, respects prefs)
+  // notify lawyer + confirm to client (fire-and-forget, respects prefs)
   void (async () => {
     try {
-      const lawyer = await db.Lawyer.findOne({ name: (result.data as unknown as { lawyerName: string }).lawyerName }).lean() as { id?: string } | null;
+      const { date, time, lawyerName: bookedLawyerName } = result.data as unknown as { date: string; time: string; lawyerName: string };
+      // lawyer
+      const lawyer = await db.Lawyer.findOne({ name: bookedLawyerName }).lean() as { id?: string } | null;
       if (lawyer?.id) {
         const lawyerUser = await (await import("../data/store")).findUserById(lawyer.id);
         if (lawyerUser) {
           const { sendEmailIfEnabled } = await import("../lib/email");
           const { sendSmsIfEnabled } = await import("../lib/sms");
           const { sendPushIfEnabled } = await import("../lib/push");
-          const { date, time } = result.data as unknown as { date: string; time: string };
           await Promise.all([
-            sendEmailIfEnabled(lawyer.id, lawyerUser.email, "appointment", "New appointment booked", `<p>New consultation on ${date} at ${time} booked.</p>`),
+            sendEmailIfEnabled(lawyer.id, lawyerUser.email, "appointment", "New appointment booked", `<p>New consultation on <strong>${date} at ${time} IST</strong> with ${user.name ?? "client"} booked.</p><p><a href="${process.env.FRONTEND_URL ?? "http://localhost:5173"}/lawyer/appointments">View</a></p>`),
             lawyerUser.phone ? sendSmsIfEnabled(lawyer.id, lawyerUser.phone, "appointment", `NyayaConnect: New appointment ${date} ${time}`) : Promise.resolve(false),
             sendPushIfEnabled(lawyer.id, "appointment", { title: "New appointment", body: `${date} ${time} — check your calendar`, url: "/lawyer/appointments" }),
           ]);
         }
+      }
+      // client confirmation (user who booked)
+      if (user?.id && user?.email) {
+        const { sendEmailIfEnabled } = await import("../lib/email");
+        const { sendPushIfEnabled } = await import("../lib/push");
+        await Promise.all([
+          sendEmailIfEnabled(user.id, user.email, "appointment", "Appointment confirmed — NyayaConnect", `<p>Hi ${user.name},</p><p>Your consultation with <strong>${bookedLawyerName}</strong> is confirmed for <strong>${date} at ${time} IST</strong>.</p><p>View: <a href="${process.env.FRONTEND_URL ?? "http://localhost:5173"}/dashboard/appointments">My Appointments</a></p><p>You will also get reminders 24h and 1h before.</p>`),
+          sendPushIfEnabled(user.id, "appointment", { title: "Appointment confirmed", body: `${bookedLawyerName} — ${date} ${time}`, url: "/dashboard/appointments" }),
+        ]);
       }
     } catch {}
   })();

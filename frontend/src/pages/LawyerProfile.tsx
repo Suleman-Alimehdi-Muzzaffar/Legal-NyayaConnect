@@ -34,20 +34,31 @@ const BOOKING_WINDOW_DAYS = 30;
 
 const pad = (n: number) => n.toString().padStart(2, '0');
 
+const getTodayISTStr = () =>
+  new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+const getNowMinutesIST = () => {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone: "Asia/Kolkata", hour: "2-digit", minute: "2-digit", hour12: false }).formatToParts(new Date());
+  return Number(parts.find((p) => p.type === "hour")?.value ?? "0") * 60 + Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+};
+
 function buildSlotsFromWeeklyHours(weeklyHours: WeeklyHour[]): BookingDay[] {
   const days: BookingDay[] = [];
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
+  // Use IST date (not browser local) so client portal matches backend and never shows previous days
+  const todayStr = getTodayISTStr();
+  const [y, m, d] = todayStr.split("-").map(Number);
+  const istToday = new Date(y, m - 1, d);
 
   for (let i = 0; i < BOOKING_WINDOW_DAYS; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    const dayName = date.toLocaleDateString('en-US', { weekday: 'long' });
-    const cfg = weeklyHours.find(h => h.day === dayName && h.active);
+    const date = new Date(istToday);
+    date.setDate(istToday.getDate() + i);
+    const istDateStr = `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+    // Day name in IST for this date (at noon IST to avoid DST edge)
+    const dayName = new Date(`${istDateStr}T12:00:00+05:30`).toLocaleDateString("en-US", { weekday: "long", timeZone: "Asia/Kolkata" });
+    const cfg = weeklyHours.find((h) => h.day === dayName && h.active);
     if (!cfg) continue;
 
-    const [startH, startM] = cfg.start.split(':').map(Number);
-    const [endH, endM] = cfg.end.split(':').map(Number);
+    const [startH, startM] = cfg.start.split(":").map(Number);
+    const [endH, endM] = cfg.end.split(":").map(Number);
     const startMinutes = startH * 60 + (startM || 0);
     const endMinutes = endH * 60 + (endM || 0);
 
@@ -56,11 +67,10 @@ function buildSlotsFromWeeklyHours(weeklyHours: WeeklyHour[]): BookingDay[] {
       slots.push(`${pad(Math.floor(t / 60))}:${pad(t % 60)}`);
     }
 
-    // For today, hide slots that are already in the past (IST) so card count matches live availability
+    // For today (IST), hide slots that are already in the past so card count matches live availability
     let filteredSlots = slots;
     if (i === 0) {
-      const now = new Date();
-      const nowM = now.getHours() * 60 + now.getMinutes();
+      const nowM = getNowMinutesIST();
       filteredSlots = slots.filter((s) => {
         const [h, m] = s.split(":").map(Number);
         return h * 60 + m > nowM + 15;
@@ -69,8 +79,7 @@ function buildSlotsFromWeeklyHours(weeklyHours: WeeklyHour[]): BookingDay[] {
     }
 
     if (filteredSlots.length > 0) {
-      // Local date string (avoids UTC off-by-one from toISOString)
-      days.push({ date: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`, slots: filteredSlots });
+      days.push({ date: istDateStr, slots: filteredSlots });
     }
   }
   return days;
@@ -118,14 +127,21 @@ export default function LawyerProfile() {
 
   // Bookable days: derive from weeklyHours (authoritative) so date cards always match
   // lawyer's real availability. Falls back to stored availableSlots only for legacy docs
-  // without weeklyHours, otherwise generates next 30 days.
+  // without weeklyHours, otherwise generates next 30 days. Filters out previous dates (IST).
   const bookingSlots = useMemo<BookingDay[]>(() => {
     if (!lawyer) return [];
     const weeklyHours = (lawyer as unknown as { weeklyHours?: WeeklyHour[] }).weeklyHours;
     if (weeklyHours && weeklyHours.length > 0) {
       return buildSlotsFromWeeklyHours(weeklyHours);
     }
-    if (lawyer.availableSlots.length > 0) return lawyer.availableSlots as BookingDay[];
+    if (lawyer.availableSlots.length > 0) {
+      const todayStr = getTodayISTStr();
+      const filtered = (lawyer.availableSlots as BookingDay[])
+        .filter((day) => day.date >= todayStr && Array.isArray(day.slots) && day.slots.length > 0)
+        .sort((a, b) => a.date.localeCompare(b.date));
+      if (filtered.length > 0) return filtered;
+      // if all legacy slots are in the past, fall back to generated window
+    }
     return buildSlotsFromWeeklyHours(DEFAULT_WEEKLY_HOURS);
   }, [lawyer]);
 

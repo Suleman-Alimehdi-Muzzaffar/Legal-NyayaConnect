@@ -72,11 +72,17 @@ const Appointments = () => {
       .catch(() => setAvailableSlots([]));
   }, [rescheduleTarget, rescheduleDate, lawyers]);
 
+  // IST today/tomorrow helpers — keeps date picker aligned with backend (Asia/Kolkata) and avoids UTC off-by-one
+  const getTodayIST = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date());
+  const getTomorrowIST = () => {
+    const tomorrow = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    return `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, "0")}-${String(tomorrow.getDate()).padStart(2, "0")}`;
+  };
+
   const openReschedule = (apt: (typeof appointmentsList)[number]) => {
     setRescheduleTarget(apt);
-    const nxt = new Date();
-    nxt.setDate(nxt.getDate() + 1);
-    setRescheduleDate(nxt.toISOString().slice(0, 10));
+    setRescheduleDate(getTomorrowIST());
     setRescheduleTime("");
     setRescheduleReason("");
     setAvailableSlots(null);
@@ -86,6 +92,10 @@ const Appointments = () => {
     e.preventDefault();
     if (!rescheduleTarget || !rescheduleDate || !rescheduleTime) {
       toast.error("Pick a date and time");
+      return;
+    }
+    if (rescheduleDate < getTodayIST()) {
+      toast.error("Cannot select a past date");
       return;
     }
     setRescheduleSubmitting(true);
@@ -394,7 +404,7 @@ const Appointments = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <label className="flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-gray-300">New Date</span>
-                    <input type="date" required value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} min={new Date().toISOString().slice(0,10)} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#D4AF37]/50 outline-none" />
+                    <input type="date" required value={rescheduleDate} onChange={(e) => setRescheduleDate(e.target.value)} min={new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date())} className="bg-white/5 border border-white/10 rounded-xl px-3 py-2.5 text-sm text-white focus:border-[#D4AF37]/50 outline-none" />
                   </label>
                   <label className="flex flex-col gap-1.5">
                     <span className="text-xs font-semibold text-gray-300">New Time (IST)</span>
